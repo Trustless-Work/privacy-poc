@@ -4,13 +4,12 @@ This document defines the minimum adversarial cases for the PoC. It is not an au
 
 | Threat | Expected control |
 |---|---|
-| Release before approval | Escrow state transition rejects release |
-| Amount substitution | Proof binds transfer amount to milestone commitment |
+| Release without approver | `approve_and_release` requires configured approver authorization |
+| Partial release | Modified PoC `SpenderTransfer` circuit constrains remaining allowance value to zero |
 | Receiver substitution | Receiver is a public input bound to escrow and proof |
-| Replay across milestones/escrows | Domain-separated escrow ID, milestone ID, chain, and nonce |
+| Replay | Proof references the current allowance commitment; successful release changes it and escrow state |
 | Allowance reuse/overspend | Confidential allowance state and nonce are consumed exactly once |
-| Malicious release signer | Signer can authorize timing, not change amount or receiver |
-| Malicious approver | Cannot release alone; separate release-signer authorization remains required |
+| Malicious approver | Can choose release timing, but cannot change receiver or partially release |
 | Indexer tampering | Client verifies reconstructed openings against on-chain commitments |
 | RPC history expiry | Durable indexer preserves the full required event history |
 | Local-state loss | Documented encrypted backup/recovery or indexed reconstruction |
@@ -24,9 +23,9 @@ This document defines the minimum adversarial cases for the PoC. It is not an au
 1. Value cannot be created by escrow operations.
 2. A milestone can produce at most one successful release.
 3. Only the configured receiver can receive the release.
-4. Released value equals the privately committed milestone value.
+4. Released value equals the complete pre-release confidential allowance.
 5. The public lifecycle never emits or stores the plaintext amount.
-6. Cancellation cannot coexist with a successful release.
+6. Escrow state changes to `Released` only if the confidential transfer succeeds atomically.
 7. Auditor access does not grant spending authority.
 8. Selective disclosure reveals only the statement authorized by the holder.
 

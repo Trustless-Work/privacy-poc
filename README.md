@@ -7,11 +7,11 @@ A testnet proof of concept for milestone escrow using Stellar Confidential Token
 
 ## Research question
 
-Can a Trustless Work escrow contract securely spend a payer's confidential delegated allowance while cryptographically binding the hidden transfer amount to the approved milestone?
+Can one approver atomically release an entire confidential USDC allowance to one receiver without revealing its amount on-chain?
 
 ## Scope
 
-The first PoC implements one milestone and known counterparties.
+The first PoC implements one escrow, treated as one milestone, with known counterparties.
 
 - **Public:** payer and receiver addresses, escrow roles, lifecycle status, approvals, and timestamps.
 - **Confidential:** escrow amount, milestone amount, internal transfer amount, and confidential balances.
@@ -23,39 +23,35 @@ This repository reuses the package boundaries and protocol implementation from [
 
 ```text
 contracts/
-  confidential-token/   # upstream OpenZeppelin-based wrapper integration
+  token/                # upstream OpenZeppelin-based wrapper integration
   verifier/             # UltraHonk verification-key registry
   auditor/              # auditor-key registry
   escrow/               # Trustless Work one-milestone escrow PoC
 packages/
   sdk/                  # crypto, proving, chain, state, escrow adapters
   disclosure/           # selective-disclosure circuits and pinned VKs
-  app/                  # Next.js demo for payer, receiver, approver, auditor
+  app/                  # imported Next.js wallet, verifier, and auditor demo
   indexer/              # durable confidential-event ingestion and read API
 scripts/                # deployment and end-to-end test flows
 docs/                   # architecture, decisions, risks, and PoC plan
 ```
 
-See [Architecture](docs/architecture.md), [PoC Plan](docs/poc-plan.md), [USDC Strategy](docs/usdc-strategy.md), and [Threat Model](docs/threat-model.md).
+See [Contract Specification](docs/contract-spec.md), [Architecture](docs/architecture.md), [PoC Plan](docs/poc-plan.md), [USDC Strategy](docs/usdc-strategy.md), and [Threat Model](docs/threat-model.md).
 
 ## Intended flow
 
 1. Payer and receiver register confidential accounts.
 2. Payer deposits testnet USDC into the Confidential Token wrapper.
 3. Payer merges the receiving balance into spendable state.
-4. Payer commits to a private milestone amount and delegates a confidential allowance to the escrow.
-5. Approver marks the milestone approved.
-6. Release signer submits a proof-bound release.
-7. Escrow calls the confidential delegated transfer to the receiver.
-8. Receiver reconstructs the incoming opening and can selectively disclose the payment.
-9. Auditor can decrypt the amount using the registered auditor key.
-10. An unused allowance can be reclaimed only through a valid cancellation or terminal dispute path.
+4. Payer calls the escrow's `fund` entry point, which atomically delegates the complete private escrow amount as one confidential allowance.
+5. Approver submits one approval-and-release transaction with an allowance-exhaustion proof.
+6. Escrow atomically calls the confidential delegated transfer to the configured receiver.
+7. Receiver reconstructs the incoming opening and can selectively disclose the payment.
+8. Auditor can decrypt the amount using the registered auditor key.
 
-## USDC-first policy
+## USDC asset
 
-The PoC targets USDC semantics and 7-decimal Stellar amounts from the beginning. The preferred integration is a testnet USDC Stellar Asset Contract if an appropriate issuer and asset are available. If not, development uses a clearly named mock SEP-41 token configured with USDC-compatible decimals and behavior. Native XLM is used only for Stellar network fees and test-account funding.
-
-No token contract or asset ID is canonical until recorded in a reviewed deployment manifest.
+The deployment path now targets Stellar testnet USDC: issuer `GBBD47…LFLA5`, SEP-41 SAC `CBIELT…QDAMA`, and 7-decimal base units. The deployment script derives the SAC from the asset and aborts on an identifier mismatch. Native XLM is used only for test-account funding and network fees. See [USDC Strategy](docs/usdc-strategy.md) for the complete manifest and source.
 
 ## Go/no-go gate
 
@@ -63,18 +59,17 @@ Before building a complete UI, the contract spike must prove all of the followin
 
 - A Soroban escrow contract can act as the authorized confidential spender.
 - The payer cannot overspend or reuse an allowance.
-- The released hidden amount is cryptographically equal to the committed milestone amount.
-- The proof is bound to escrow ID, milestone ID, receiver, and current allowance state.
+- The PoC's modified spender-transfer proof enforces that the post-transfer allowance balance is zero.
+- The configured receiver and current allowance state are bound to the authorized invocation and proof.
 - Replay, receiver substitution, amount substitution, and release-before-approval fail.
-- Cancellation safely returns or unlocks unused confidential value.
 - Receiver state can be recovered from indexed history.
 - Auditor decryption and receiver selective disclosure both work.
 
-If amount-to-milestone binding requires modifying upstream Noir circuits, that change is isolated and documented before broader Trustless Work contract integration.
+The intended circuit change is deliberately narrow: add a zero-remaining-allowance constraint to the upstream `SpenderTransfer` circuit in this dedicated PoC deployment. The allowance itself is the committed one-milestone amount, so v0 needs no separate amount commitment.
 
 ## Status
 
-Repository scaffold and technical documentation. Protocol code will be imported from the reference demo at a pinned commit in the next implementation step.
+The pinned reference monorepo is imported. The branch now includes the three-entry-point escrow contract, delegated-spending SDK witnesses and XDR submitters, the pinned `SetSpender` funding circuit, a PoC-specific full-release Noir circuit, compiled browser proving artifacts and packed verifier keys, USDC-first deployment configuration, and contract/circuit adversarial tests. The escrow UI and a fresh integrated testnet deployment remain to be built.
 
 ## References
 

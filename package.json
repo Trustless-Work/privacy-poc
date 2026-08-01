@@ -4,11 +4,14 @@
   "private": true,
   "description": "Testnet PoC for confidential USDC milestone escrow on Stellar",
   "license": "MIT",
-  "packageManager": "pnpm@10.14.0",
+  "packageManager": "pnpm@10.33.0",
   "engines": {
     "node": ">=20"
   },
   "scripts": {
+    "build:contracts": "bash scripts/build-contracts.sh",
+    "build:escrow-circuits": "bash scripts/build-full-release-circuit.sh",
+    "build:full-release-circuit": "bash scripts/build-full-release-circuit.sh",
     "build": "pnpm -r --if-present build",
     "test": "pnpm -r --if-present test",
     "lint": "pnpm -r --if-present lint",

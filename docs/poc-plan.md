@@ -32,23 +32,23 @@ Goal: prove that a Soroban contract can safely spend a confidential allowance.
 - Register a minimal test spender contract.
 - Create confidential allowance from payer to spender.
 - Invoke delegated transfer through the spender.
-- Validate allowance exhaustion, nonce behavior, cancellation/reclaim, and unauthorized calls.
+- Validate allowance exhaustion, commitment-chain replay protection, owner revocation, and unauthorized calls.
 - Capture all required proof inputs and on-chain events.
 
 Exit criteria: delegated transfer succeeds once and all replay/overspend tests fail.
 
-## Phase 3 — One-milestone escrow
+## Phase 3 — One-milestone full-release escrow
 
 Goal: cryptographically couple Trustless Work approval to the confidential release.
 
-- Implement payer, receiver, approver, release signer, and auditor configuration.
-- Store milestone amount commitment.
-- Bind proof to escrow, milestone, receiver, allowance state, and release nonce.
-- Implement initialize, confirm funding, approve, release, cancel, and reclaim.
+- Implement payer, receiver, approver, and confidential-token configuration.
+- Treat the payer's delegated allowance as the complete escrow amount.
+- Modify the dedicated PoC deployment's `SpenderTransfer` circuit to constrain the post-transfer allowance value to zero.
+- Implement `initialize`, atomic `fund`, and atomic `approve_and_release`.
 - Emit lifecycle events without plaintext amounts.
 - Add positive and adversarial end-to-end tests.
 
-Exit criteria: exactly one approved confidential payment can be released to the configured receiver for the committed amount.
+Exit criteria: one approval releases the complete live allowance exactly once to the configured receiver, without revealing the amount.
 
 ## Phase 4 — Operational proof
 
@@ -70,7 +70,9 @@ Exit criteria: a second operator can reproduce the PoC and recover state using o
 - hiding addresses or transaction graph;
 - legal claims of anonymity or compliance;
 - production key management;
-- platform fees until private amount binding is proven.
+- platform fees;
+- disputes, cancellation, and contract-managed refunds;
+- partial releases.
 
 ## Decision log required
 
@@ -79,6 +81,6 @@ Create an ADR before changing any of these assumptions:
 - selected underlying USDC/test asset;
 - circuit modification vs. separate equality proof;
 - escrow custody/allowance semantics;
-- cancellation and dispute recovery;
+- payer revocation behavior and failed-release recovery;
 - indexer provider and retention guarantees;
 - auditor ownership and key rotation.

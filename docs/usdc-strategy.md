@@ -6,15 +6,31 @@ Design and test the PoC around USDC, not native XLM.
 
 XLM is still required for Stellar account activation and transaction fees, but it is not the escrow asset exposed by the product flow.
 
-## Preferred asset order
+## Selected testnet asset
 
-1. A supported Circle-issued or otherwise authoritative testnet USDC asset exposed through a Stellar Asset Contract and compatible with the Confidential Token preview.
-2. A dedicated `MockUSDC` SEP-41 token deployed for the PoC with 7 decimals and explicit test-only naming.
-3. Native XLM only as a temporary protocol-diagnostic fallback, never as the accepted Phase 1 result.
+The first PoC deployment uses the Stellar testnet USDC asset documented by Stellar:
+
+| Field | Value |
+|---|---|
+| Asset code | `USDC` |
+| Issuer | `GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5` |
+| SEP-41 SAC | `CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA` |
+| Decimals | 7 |
+| Network | Stellar testnet |
+| Verified | 2026-08-01 |
+| Source | [Stellar x402 documentation](https://developers.stellar.org/docs/build/agentic-payments/x402) |
+
+The deployment script resolves the SAC from the asset code and issuer and aborts if the resulting contract does not match the documented SAC. Users still need testnet XLM for fees and a USDC trustline/balance for deposits.
+
+## Fallback order
+
+1. The selected testnet USDC SAC above.
+2. A dedicated `MockUSDC` SEP-41 token with 7 decimals if the public test asset becomes unavailable after a testnet reset.
+3. Native XLM only as a temporary protocol diagnostic, never as the accepted PoC asset.
 
 ## Why the fallback is necessary
 
-USDC availability, issuers, and testnet asset identifiers can change. The repository must not hard-code an unverified asset ID copied from an old guide. Deployment scripts will require the underlying token contract ID, and reviewed manifests will record the network, issuer, asset code, SAC ID, deployment date, and source used to verify it.
+Testnet assets can change after network resets. The identifier is intentionally pinned together with its authoritative source and a runtime SAC derivation check. Any future change requires a reviewed update to both this document and the deployment manifest.
 
 ## Amount rules
 

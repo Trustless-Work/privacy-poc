@@ -1,0 +1,2 @@
+[workspace]
+members = ["lib", "set_spender", "spender_transfer_full_release"]
