@@ -69,7 +69,23 @@ The intended circuit change is deliberately narrow: add a zero-remaining-allowan
 
 ## Status
 
-The pinned reference monorepo is imported. The branch now includes the three-entry-point escrow contract, delegated-spending SDK witnesses and XDR submitters, the pinned `SetSpender` funding circuit, a PoC-specific full-release Noir circuit, compiled browser proving artifacts and packed verifier keys, USDC-first deployment configuration, contract/circuit adversarial tests, and a guided six-step escrow walkthrough at `/escrow`. Connecting the walkthrough actions to a fresh integrated USDC testnet deployment remains pending.
+The pinned reference monorepo is imported. The implementation includes the three-entry-point escrow contract, delegated-spending SDK witnesses and XDR submitters, the pinned `SetSpender` funding circuit, a PoC-specific full-release Noir circuit, compiled browser proving artifacts and packed verifier keys, USDC-first deployment configuration, contract/circuit adversarial tests, and a guided six-step escrow walkthrough at `/escrow`.
+
+V1 uses one pre-deployed escrow contract for one complete lifecycle. The approver initializes its fixed roles once; `/escrow/payer`, `/escrow/approver`, and `/escrow/receiver` then execute the real testnet SDK operations against that same contract address. The deployment script writes the resulting public contract manifest to `packages/app/.env.local`, which activates these pages automatically.
+
+## Deploy and run the singleton v1
+
+The deployer needs a funded Stellar CLI identity named `admin`. Then:
+
+```bash
+pnpm build:contracts
+pnpm build:escrow-circuits
+pnpm --filter @ctd/sdk exec tsx ../../scripts/deploy.ts
+pnpm --filter @ctd/sdk build
+pnpm --filter @ctd/app dev
+```
+
+The deployment provisions the verifier, auditor registry, confidential USDC wrapper, and exactly one uninitialized escrow contract on Stellar testnet. It also writes the gitignored app configuration. Open `/escrow`, connect the three role wallets, and follow the guided sequence.
 
 ## References
 

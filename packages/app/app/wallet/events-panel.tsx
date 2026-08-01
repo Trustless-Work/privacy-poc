@@ -74,7 +74,7 @@ export function EventsPanel({ wallet, reloadKey = 0 }: { wallet: ConfidentialWal
       {events && (
         <ul className="space-y-2">
           {events.map((ev) => (
-            <EventRow key={ev.cursor} ev={ev} wallet={wallet} />
+            <EventRow key={ev.cursor} ev={ev} wallet={wallet} assetCode={active.assetCode} />
           ))}
         </ul>
       )}
@@ -84,7 +84,7 @@ export function EventsPanel({ wallet, reloadKey = 0 }: { wallet: ConfidentialWal
 
 type Direction = "received" | "sent" | null;
 
-function EventRow({ ev, wallet }: { ev: ConfidentialEvent; wallet: ConfidentialWallet }) {
+function EventRow({ ev, wallet, assetCode }: { ev: ConfidentialEvent; wallet: ConfidentialWallet; assetCode: string }) {
   const [showDisclose, setShowDisclose] = useState(false);
 
   const direction: Direction =
@@ -137,7 +137,7 @@ function EventRow({ ev, wallet }: { ev: ConfidentialEvent; wallet: ConfidentialW
         )}
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-neutral-400">
-        {summary(ev, wallet.address, ev.type === "transfer" ? amt : undefined)}
+        {summary(ev, wallet.address, ev.type === "transfer" ? amt : undefined, assetCode)}
       </div>
       {showDisclose && direction && (
         <DiscloseFlow ev={ev as TransferEvent} direction={direction} wallet={wallet} />
@@ -253,12 +253,12 @@ const Muted = ({ children }: { children: React.ReactNode }) => (
 
 /** For a transfer row, render the decrypted amount, a loading hint, or fall
  *  back to "confidential" when this wallet can't recover it. */
-function TransferAmount({ amt }: { amt: { loading: boolean; value: bigint | null } }) {
+function TransferAmount({ amt, assetCode }: { amt: { loading: boolean; value: bigint | null }; assetCode: string }) {
   if (amt.loading) return <Muted>decrypting…</Muted>;
   if (amt.value === null) return <Muted>amount confidential</Muted>;
   return (
     <Amt title="Decrypted with your key — still confidential on-chain">
-      {stroopsToXlm(amt.value)} XLM
+      {stroopsToXlm(amt.value)} {assetCode}
     </Amt>
   );
 }
@@ -267,6 +267,7 @@ function summary(
   ev: ConfidentialEvent,
   me: string,
   transferAmt?: { loading: boolean; value: bigint | null },
+  assetCode = "XLM",
 ) {
   const who = (a: string) => (a === me ? <You /> : <Addr value={a} className="text-neutral-200" />);
   switch (ev.type) {
@@ -279,7 +280,7 @@ function summary(
     case "deposit":
       return (
         <>
-          <Amt>{stroopsToXlm(ev.amount)} XLM</Amt> <Muted>(public)</Muted>
+          <Amt>{stroopsToXlm(ev.amount)} {assetCode}</Amt> <Muted>(public)</Muted>
         </>
       );
     case "merge":
@@ -289,7 +290,7 @@ function summary(
     case "withdraw":
       return (
         <>
-          <Amt>{stroopsToXlm(ev.amount)} XLM</Amt> <Muted>(public)</Muted>
+          <Amt>{stroopsToXlm(ev.amount)} {assetCode}</Amt> <Muted>(public)</Muted>
         </>
       );
     case "transfer": {
@@ -297,13 +298,13 @@ function summary(
       return ev.to === me ? (
         <>
           <span className="font-medium text-emerald-300">from</span> {who(ev.from)}{" "}
-          <span className="text-neutral-600">·</span> <TransferAmount amt={amt} />
+          <span className="text-neutral-600">·</span> <TransferAmount amt={amt} assetCode={assetCode} />
           <Muted>(confidential)</Muted>
         </>
       ) : (
         <>
           <span className="font-medium text-orange-300">to</span> {who(ev.to)}{" "}
-          <span className="text-neutral-600">·</span> <TransferAmount amt={amt} />
+          <span className="text-neutral-600">·</span> <TransferAmount amt={amt} assetCode={assetCode} />
           <Muted>(confidential)</Muted>
         </>
       );

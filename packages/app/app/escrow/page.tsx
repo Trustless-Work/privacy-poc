@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useActiveDeployment } from "@/lib/active-deployment";
 import { Addr } from "../addr";
 
@@ -14,6 +15,7 @@ type Step = {
   public: string[];
   private: string[];
   mechanics: string[];
+  href: string;
 };
 
 const STEPS: Step[] = [
@@ -32,6 +34,7 @@ const STEPS: Step[] = [
       "The payer receives a hidden balance commitment.",
       "Merge makes the receiving balance available to spend.",
     ],
+    href: "/wallet",
   },
   {
     id: 2,
@@ -48,6 +51,7 @@ const STEPS: Step[] = [
       "A registration proof binds confidential keys to the escrow address.",
       "The amount is not chosen or stored during initialization.",
     ],
+    href: "/escrow/approver",
   },
   {
     id: 3,
@@ -64,6 +68,7 @@ const STEPS: Step[] = [
       "The proof demonstrates that the payer had enough confidential USDC.",
       "The allowance itself represents the complete one-milestone escrow.",
     ],
+    href: "/escrow/payer",
   },
   {
     id: 4,
@@ -80,6 +85,7 @@ const STEPS: Step[] = [
       "The approver cannot select a smaller amount or another receiver.",
       "If the transfer fails, the escrow cannot be marked Released.",
     ],
+    href: "/escrow/approver",
   },
   {
     id: 5,
@@ -96,6 +102,7 @@ const STEPS: Step[] = [
       "Funds first arrive in a separate receiving commitment.",
       "Merge combines receiving and spendable commitments without revealing either value.",
     ],
+    href: "/escrow/receiver",
   },
   {
     id: 6,
@@ -112,6 +119,7 @@ const STEPS: Step[] = [
       "Selective disclosure reveals only the chosen transfer amount.",
       "The verifier checks the proof against the original on-chain event.",
     ],
+    href: "/verify",
   },
 ];
 
@@ -229,14 +237,15 @@ export default function EscrowWalkthroughPage() {
             </ol>
           </div>
 
-          <button
-            type="button"
-            disabled={!escrow}
-            title={!escrow ? "Available after the integrated testnet deployment" : undefined}
-            className="mt-6 w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-neutral-800 disabled:text-neutral-500"
-          >
-            {escrow ? step.action : `${step.action} — deployment required`}
-          </button>
+          {escrow ? (
+            <Link href={step.href} className="mt-6 block w-full rounded-lg bg-indigo-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-indigo-500">
+              {step.action}
+            </Link>
+          ) : (
+            <button type="button" disabled className="mt-6 w-full cursor-not-allowed rounded-lg bg-neutral-800 px-4 py-3 text-sm font-semibold text-neutral-500">
+              {step.action} — deployment required
+            </button>
+          )}
         </section>
 
         <aside className="space-y-4">

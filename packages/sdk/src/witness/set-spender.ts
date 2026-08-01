@@ -54,7 +54,7 @@ export interface SetSpenderWitness {
 }
 
 export function buildSetSpenderWitness(p: SetSpenderParams): SetSpenderWitness {
-  if (p.allowance < 0n) throw new Error("allowance must be non-negative");
+  if (p.allowance <= 0n) throw new Error("allowance must be greater than zero");
   const vNew = p.v - p.allowance;
   if (vNew < 0n) throw new Error("allowance exceeds spendable balance");
 

@@ -76,6 +76,17 @@ export interface OnChainDelegation {
   liveUntilLedger: number;
 }
 
+export type EscrowStatus = "Initialized" | "Funded" | "Released";
+
+/** Public state of the singleton one-milestone escrow contract. */
+export interface OnChainEscrow {
+  payer: string;
+  receiver: string;
+  approver: string;
+  confidentialToken: string;
+  status: EscrowStatus;
+}
+
 export function keypairSigner(secret: string, networkPassphrase: string): Signer {
   const kp = Keypair.fromSecret(secret);
   return {
@@ -145,6 +156,15 @@ export class ChainClient {
         new Address(spender).toScVal(),
       ]);
       return parseDelegation(retval);
+    } catch {
+      return null;
+    }
+  }
+
+  /** Read the singleton escrow, or `null` before its one-time initialization. */
+  async escrowState(escrowContract: string): Promise<OnChainEscrow | null> {
+    try {
+      return parseEscrow(await this.simulate(escrowContract, "get_escrow", []));
     } catch {
       return null;
     }
@@ -281,4 +301,39 @@ function parseDelegation(val: xdr.ScVal): OnChainDelegation {
     throw new Error("incomplete SpenderDelegation response");
   }
   return out as OnChainDelegation;
+}
+
+function parseEscrow(val: xdr.ScVal): OnChainEscrow {
+  const entries = val.map();
+  if (!entries) throw new Error("expected ScMap for Escrow");
+  const out: Partial<OnChainEscrow> = {};
+  for (const e of entries) {
+    const key = e.key().sym().toString();
+    switch (key) {
+      case "payer":
+        out.payer = Address.fromScVal(e.val()).toString();
+        break;
+      case "receiver":
+        out.receiver = Address.fromScVal(e.val()).toString();
+        break;
+      case "approver":
+        out.approver = Address.fromScVal(e.val()).toString();
+        break;
+      case "confidential_token":
+        out.confidentialToken = Address.fromScVal(e.val()).toString();
+        break;
+      case "status": {
+        const tag = e.val().vec()?.[0]?.sym().toString();
+        if (tag !== "Initialized" && tag !== "Funded" && tag !== "Released") {
+          throw new Error(`unknown escrow status: ${tag ?? "missing"}`);
+        }
+        out.status = tag;
+        break;
+      }
+    }
+  }
+  if (!out.payer || !out.receiver || !out.approver || !out.confidentialToken || !out.status) {
+    throw new Error("incomplete Escrow response");
+  }
+  return out as OnChainEscrow;
 }

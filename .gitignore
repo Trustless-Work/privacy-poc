@@ -12,3 +12,4 @@ deployments/local/
 coverage/
 .DS_Store
 *.log
+packages/app/public/vendor/

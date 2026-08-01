@@ -147,6 +147,7 @@ export default function AdvancedPage() {
       const adv: Deployment = {
         id: "advanced",
         label: `${truncateMiddle(token, 4, 4)}`,
+        assetCode: u === XLM_SAC ? "XLM" : "TOKEN",
         kind,
         rpcUrl: base.rpcUrl,
         networkPassphrase: base.networkPassphrase,

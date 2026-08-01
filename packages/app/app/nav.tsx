@@ -19,6 +19,9 @@ import { hasAdminDashboard } from "@/lib/deployment";
 
 export const PERSONAS = [
   { href: "/escrow", label: "Escrow walkthrough", text: "text-emerald-300" },
+  { href: "/escrow/payer", label: "Escrow payer", text: "text-sky-300" },
+  { href: "/escrow/approver", label: "Escrow approver", text: "text-violet-300" },
+  { href: "/escrow/receiver", label: "Escrow receiver", text: "text-emerald-300" },
   { href: "/wallet", label: "Account holder", text: "text-indigo-300" },
   { href: "/verify", label: "Disclosure receiver", text: "text-cyan-300" },
   { href: "/auditor", label: "Auditor", text: "text-amber-300" },
@@ -198,7 +201,8 @@ function RoleDropdown() {
   // no role to play, so the picker is disabled until a token is deployed.
   const disabled = (which === "advanced" || pathname.startsWith("/advanced")) && !advanced;
   const personas: readonly Persona[] = hasAdminDashboard(active) ? [...PERSONAS, ADMIN_PERSONA] : PERSONAS;
-  const current = personas.find((p) => pathname.startsWith(p.href));
+  const current = personas.find((p) => pathname === p.href)
+    ?? personas.find((p) => pathname.startsWith(`${p.href}/`));
   return (
     <Dropdown
       label="Role"

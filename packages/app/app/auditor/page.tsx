@@ -258,8 +258,8 @@ export default function AuditorPage() {
                     <td className="py-1.5">
                       <Addr value={a.address} />
                     </td>
-                    <td className="py-1.5">{a.spendable === null ? "?" : `${stroopsToXlm(a.spendable)} XLM`}</td>
-                    <td className="py-1.5">{stroopsToXlm(a.receiving)} XLM</td>
+                    <td className="py-1.5">{a.spendable === null ? "?" : `${stroopsToXlm(a.spendable)} ${active.assetCode}`}</td>
+                    <td className="py-1.5">{stroopsToXlm(a.receiving)} {active.assetCode}</td>
                     <td className="py-1.5 text-neutral-500">ledger {a.lastLedger}</td>
                   </tr>
                 ))}
@@ -287,7 +287,7 @@ export default function AuditorPage() {
           {rows && (
             <ul className="space-y-2">
               {rows.map((row) => (
-                <AuditRowView key={row.ev.cursor} row={row} />
+                <AuditRowView key={row.ev.cursor} row={row} assetCode={active.assetCode} />
               ))}
             </ul>
           )}
@@ -297,7 +297,7 @@ export default function AuditorPage() {
   );
 }
 
-function AuditRowView({ row }: { row: AuditRow }) {
+function AuditRowView({ row, assetCode }: { row: AuditRow; assetCode: string }) {
   const { ev } = row;
   // deposit/withdraw/transfer carry from→to; register/merge (and any compliance
   // event, though the auditor never emits rows for those) carry a single account.
@@ -316,7 +316,7 @@ function AuditRowView({ row }: { row: AuditRow }) {
         <span className="text-xs text-neutral-400">{parties}</span>
         <span className="flex-1" />
         {row.amount !== null && (
-          <span className="text-sm font-medium text-amber-300">{stroopsToXlm(row.amount)} XLM</span>
+          <span className="text-sm font-medium text-amber-300">{stroopsToXlm(row.amount)} {assetCode}</span>
         )}
         {!row.channelsAgree && (
           <span className="rounded bg-red-900 px-2 py-0.5 text-xs text-red-300">undecryptable</span>
@@ -325,7 +325,7 @@ function AuditRowView({ row }: { row: AuditRow }) {
       <div className="mt-1.5 text-xs text-neutral-400">
         {row.text}
         {row.senderBalance !== null && (
-          <> · sender&apos;s balance now <span className="text-neutral-300">{stroopsToXlm(row.senderBalance)} XLM</span></>
+          <> · sender&apos;s balance now <span className="text-neutral-300">{stroopsToXlm(row.senderBalance)} {assetCode}</span></>
         )}
       </div>
       <div className="mt-1 text-xs text-neutral-600">

@@ -96,5 +96,21 @@ try {
 }
 check("funding rejects allowance above spendable", rejected);
 
+rejected = false;
+try {
+  buildSetSpenderWitness({
+    keys: payer,
+    v: 10n,
+    r: 0n,
+    allowance: 0n,
+    spenderAddressField: opI,
+    spenderSpendingKey: spender.Y,
+    ownerAuditorKey: auditorKey(),
+  });
+} catch {
+  rejected = true;
+}
+check("funding rejects a zero-value escrow", rejected);
+
 console.log(`\nescrow-witness: ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

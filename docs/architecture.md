@@ -89,3 +89,15 @@ The `approve_and_release` entry point invokes the confidential-token contract in
 ## Compatibility rule
 
 The PoC does not modify Trustless Work production v2. Integration lives in a separate escrow contract until delegated spending, full-release enforcement, recovery, and auditability are proven safe.
+
+## V1 deployment topology
+
+V1 deploys one escrow instance and routes every role page to that public contract ID. The instance supports one lifecycle only:
+
+- it begins deployed but uninitialized;
+- the approver permanently fixes payer, receiver, and approver roles;
+- the payer creates one private allowance;
+- the approver exhausts that allowance in one release;
+- the terminal `Released` state cannot be reset or reused.
+
+This singleton topology removes factory and escrow-discovery work from the privacy experiment. A reusable multi-escrow deployment model is intentionally deferred.

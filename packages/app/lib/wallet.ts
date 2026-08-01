@@ -26,11 +26,13 @@ import {
   buildRegisterWitness,
   buildWithdrawWitness,
   buildTransferWitness,
+  buildSetSpenderWitness,
   submitRegister,
   submitDeposit,
   submitMerge,
   submitWithdraw,
   submitTransfer,
+  submitFundEscrow,
   type IndexerClient,
   hybridFetchEvents,
   proveRecipientDisclosure,
@@ -50,6 +52,7 @@ import {
 import registerCircuit from "@ctd/sdk/circuits/register.json";
 import withdrawCircuit from "@ctd/sdk/circuits/withdraw.json";
 import transferCircuit from "@ctd/sdk/circuits/transfer.json";
+import setSpenderCircuit from "@ctd/sdk/circuits/set_spender.json";
 import discloseRecipientCircuit from "@ctd/disclosure/artifacts/disclose_recipient.json";
 import discloseSenderCircuit from "@ctd/disclosure/artifacts/disclose_sender.json";
 
@@ -61,12 +64,13 @@ import { clientsFor } from "./rpc";
 import { stroopsToXlm, truncatePrefix } from "./format";
 
 type Log = (msg: string) => void;
-type CircuitName = "register" | "withdraw" | "transfer" | "disclose_recipient" | "disclose_sender";
+type CircuitName = "register" | "withdraw" | "transfer" | "set_spender" | "disclose_recipient" | "disclose_sender";
 
 const CIRCUITS: Record<CircuitName, { bytecode: string } & Record<string, unknown>> = {
   register: registerCircuit as never,
   withdraw: withdrawCircuit as never,
   transfer: transferCircuit as never,
+  set_spender: setSpenderCircuit as never,
   disclose_recipient: discloseRecipientCircuit as never,
   disclose_sender: discloseSenderCircuit as never,
 };
@@ -194,7 +198,7 @@ export class ConfidentialWallet {
   }
 
   async deposit(amount: bigint): Promise<void> {
-    this.log(`depositing ${stroopsToXlm(amount)} XLM…`);
+    this.log(`depositing ${stroopsToXlm(amount)} ${this.deployment.assetCode}…`);
     const r = await submitDeposit(this.client, this.signer, this.address, this.address, amount);
     this.log(`deposited (tx ${truncatePrefix(r.hash)}) → receiving balance`);
   }
@@ -212,7 +216,7 @@ export class ConfidentialWallet {
     const kAudS = await this.client.auditorKey(this.deployment.auditorId);
 
     const s = await this.engine.sync();
-    if (s.spendable.v < amount) throw new Error(`insufficient spendable balance (${stroopsToXlm(s.spendable.v)} XLM)`);
+    if (s.spendable.v < amount) throw new Error(`insufficient spendable balance (${stroopsToXlm(s.spendable.v)} ${this.deployment.assetCode})`);
 
     const w = buildTransferWitness({
       keys: this.keys,
@@ -232,13 +236,13 @@ export class ConfidentialWallet {
     await this.engine.setSpendable(w.next);
     // No r_e bookkeeping (§15.2): the witness derives it from (vk, sigma), so
     // discloseSent() re-derives it from the emitted event whenever needed.
-    this.log(`transferred ${stroopsToXlm(amount)} XLM → ${truncatePrefix(to, 6)} (tx ${truncatePrefix(r.hash)})`);
+    this.log(`transferred ${stroopsToXlm(amount)} ${this.deployment.assetCode} → ${truncatePrefix(to, 6)} (tx ${truncatePrefix(r.hash)})`);
   }
 
   async withdraw(amount: bigint, onPhase?: (p: TxPhase) => void): Promise<void> {
     const kAudS = await this.client.auditorKey(this.deployment.auditorId);
     const s = await this.engine.sync();
-    if (s.spendable.v < amount) throw new Error(`insufficient spendable balance (${stroopsToXlm(s.spendable.v)} XLM)`);
+    if (s.spendable.v < amount) throw new Error(`insufficient spendable balance (${stroopsToXlm(s.spendable.v)} ${this.deployment.assetCode})`);
 
     const w = buildWithdrawWitness({ keys: this.keys, v: s.spendable.v, r: s.spendable.r, amount, kAudS });
     onPhase?.("proving");
@@ -248,7 +252,48 @@ export class ConfidentialWallet {
     this.log("submitting withdraw…");
     const r = await submitWithdraw(this.client, this.signer, this.address, this.address, amount, w, proof);
     await this.engine.setSpendable(w.next);
-    this.log(`withdrew ${stroopsToXlm(amount)} XLM → public (tx ${truncatePrefix(r.hash)})`);
+    this.log(`withdrew ${stroopsToXlm(amount)} ${this.deployment.assetCode} → public (tx ${truncatePrefix(r.hash)})`);
+  }
+
+  /** Create the singleton escrow's complete private allowance. */
+  async fundEscrow(
+    escrowContract: string,
+    amount: bigint,
+    liveUntilLedger: number,
+    onPhase?: (p: TxPhase) => void,
+  ): Promise<void> {
+    const escrowAccount = await this.client.confidentialBalance(escrowContract);
+    if (!escrowAccount) throw new Error("escrow is not initialized as a confidential spender");
+    const ownerAccount = await this.client.confidentialBalance(this.address);
+    if (!ownerAccount) throw new Error("payer is not registered");
+    const ownerAuditorKey = await this.client.auditorKey(ownerAccount.auditorId);
+    const state = await this.engine.sync();
+    if (state.spendable.v < amount) throw new Error("amount exceeds the payer's spendable balance");
+
+    const witness = buildSetSpenderWitness({
+      keys: this.keys,
+      v: state.spendable.v,
+      r: state.spendable.r,
+      allowance: amount,
+      spenderAddressField: addressToField(escrowContract),
+      spenderSpendingKey: escrowAccount.spendingKey,
+      ownerAuditorKey,
+    });
+    onPhase?.("proving");
+    this.log("proving private escrow funding…");
+    const { proof } = await this.prover("set_spender").prove(witness.inputs);
+    onPhase?.("submitting");
+    this.log("submitting singleton escrow funding…");
+    const result = await submitFundEscrow(
+      this.client,
+      this.signer,
+      escrowContract,
+      liveUntilLedger,
+      witness,
+      proof,
+    );
+    await this.engine.setSpendable(witness.next);
+    this.log(`escrow funded privately (tx ${truncatePrefix(result.hash)})`);
   }
 
   /**

@@ -104,7 +104,7 @@ export function openStoredDelegation(
 }
 
 export function buildFullReleaseWitness(p: FullReleaseParams): FullReleaseWitness {
-  if (p.allowance < 0n) throw new Error("allowance must be non-negative");
+  if (p.allowance <= 0n) throw new Error("allowance must be greater than zero");
 
   const rA = deriveAllowR(p.dvk, p.allowanceSalt);
   const cA = commit(p.allowance, rA);

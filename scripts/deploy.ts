@@ -13,6 +13,8 @@
  * Deployer identity: the `admin` key in the stellar CLI config.
  */
 
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { xdr, Address } from "@stellar/stellar-sdk";
 
 import {
@@ -211,6 +213,24 @@ async function main(): Promise<void> {
   };
   saveDeployment(deployment);
   console.log(`\nwrote deployments/${NETWORK}.json`);
+
+  // The app intentionally serves one canonical pre-deployed escrow. Generate
+  // its local public configuration so `pnpm --filter @ctd/app dev` immediately
+  // uses this USDC deployment. This file is gitignored.
+  const appEnv = [
+    `NEXT_PUBLIC_TOKEN_CONTRACT_ID=${token}`,
+    `NEXT_PUBLIC_VERIFIER_CONTRACT_ID=${verifier}`,
+    `NEXT_PUBLIC_AUDITOR_CONTRACT_ID=${auditor}`,
+    `NEXT_PUBLIC_UNDERLYING_CONTRACT_ID=${underlying}`,
+    `NEXT_PUBLIC_ESCROW_CONTRACT_ID=${escrow}`,
+    `NEXT_PUBLIC_FACTORY_CONTRACT_ID=${factory}`,
+    `NEXT_PUBLIC_DEPLOYED_AT_LEDGER=${ledgerBeforeToken}`,
+    "NEXT_PUBLIC_AUDITOR_ID=0",
+    `NEXT_PUBLIC_AUDITOR_SECRET_HEX=${toHex32(auditorSecret)}`,
+    "",
+  ].join("\n");
+  writeFileSync(join(REPO_ROOT, "packages/app/.env.local"), appEnv);
+  console.log("wrote packages/app/.env.local for the singleton escrow UI");
 }
 
 /** Scan token events for `address_as_field_set` and return its field value. */

@@ -42,6 +42,8 @@ export interface Deployment {
   id: string;
   /** Short human label shown in the deployment selector. */
   label: string;
+  /** Human unit shown by the demo; all current assets use 7 decimal places. */
+  assetCode: string;
   kind: CtKind;
   rpcUrl: string;
   networkPassphrase: string;
@@ -66,30 +68,36 @@ export interface Deployment {
 }
 
 const INDEXER_URL = process.env.NEXT_PUBLIC_INDEXER_URL || undefined;
+const DEFAULT_XLM_SAC = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+const POC_TOKEN = process.env.NEXT_PUBLIC_TOKEN_CONTRACT_ID;
+const POC_ESCROW = process.env.NEXT_PUBLIC_ESCROW_CONTRACT_ID;
+const POC_ENABLED = Boolean(POC_TOKEN && POC_ESCROW);
 
 export const DEFAULT_DEPLOYMENT: Deployment = {
   id: "default",
-  label: "Default Confidential Token",
+  label: POC_ENABLED ? "Confidential USDC Escrow PoC" : "Default Confidential Token",
+  assetCode: POC_ENABLED ? "USDC" : "XLM",
   kind: "vanilla",
   rpcUrl: "https://soroban-testnet.stellar.org",
   networkPassphrase: Networks.TESTNET,
   indexerUrl: INDEXER_URL,
-  deployedAtLedger: 3013364,
-  auditorId: 0,
-  auditorSecretHex: "0x00c066da47bac8f87cd3eb9a36c37b417ca40cfa2730e7d8eb7f0bf939d11832",
+  deployedAtLedger: Number(process.env.NEXT_PUBLIC_DEPLOYED_AT_LEDGER || 3013364),
+  auditorId: Number(process.env.NEXT_PUBLIC_AUDITOR_ID || 0),
+  auditorSecretHex: process.env.NEXT_PUBLIC_AUDITOR_SECRET_HEX || "0x00c066da47bac8f87cd3eb9a36c37b417ca40cfa2730e7d8eb7f0bf939d11832",
   contracts: {
-    token: "CBF64DEOVQAXJFBSNGFEUT2AH4H7K5JBY3ZYJ5GVEINMNSDISWRG5N3F",
-    verifier: "CDCET36PIS44DWJM5UQSSI4ZHGRDSBIIQW4G4ALPYK3Y6FEQGY5ZWFXL",
-    auditor: "CA4II62E35TQKPGHCPBD6EBAS732GSGS6H37UUWKEDHR4YTBVMPHVY4L",
-    underlying: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+    token: POC_TOKEN || "CBF64DEOVQAXJFBSNGFEUT2AH4H7K5JBY3ZYJ5GVEINMNSDISWRG5N3F",
+    verifier: process.env.NEXT_PUBLIC_VERIFIER_CONTRACT_ID || "CDCET36PIS44DWJM5UQSSI4ZHGRDSBIIQW4G4ALPYK3Y6FEQGY5ZWFXL",
+    auditor: process.env.NEXT_PUBLIC_AUDITOR_CONTRACT_ID || "CA4II62E35TQKPGHCPBD6EBAS732GSGS6H37UUWKEDHR4YTBVMPHVY4L",
+    underlying: process.env.NEXT_PUBLIC_UNDERLYING_CONTRACT_ID || DEFAULT_XLM_SAC,
+    escrow: POC_ESCROW,
     // ⚠️ Paste the factory id printed by `scripts/deploy.ts` here. Advanced
     // mode is disabled in the UI until this is set.
-    factory: "CDX4DBNWDMD7BVZCOJPTXVTBRXU2RG7JUOZKOOUX5RVWWWWIGV2LWS6Z",
+    factory: process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ID || "CDX4DBNWDMD7BVZCOJPTXVTBRXU2RG7JUOZKOOUX5RVWWWWIGV2LWS6Z",
   },
 };
 
 /** The XLM Stellar Asset Contract — the default underlying for advanced mode. */
-export const XLM_SAC = DEFAULT_DEPLOYMENT.contracts.underlying;
+export const XLM_SAC = DEFAULT_XLM_SAC;
 
 /** Human label for a CT kind (used across the advanced wizard + admin UI). */
 export function kindLabel(kind: CtKind): string {

@@ -2,7 +2,12 @@
 
 The Next.js browser demo for the [confidential token](../../README.md). One page per persona:
 
-- **`/escrow`** — a guided six-step walkthrough of the Trustless Work PoC: wallet preparation, initialization, private funding, approval/full release, receipt/merge, and audit or selective disclosure. Each step distinguishes public state from confidential data. Actions remain deployment-gated until the integrated USDC escrow is configured.
+- **`/escrow`** — the guided six-step overview for the singleton Trustless Work PoC.
+- **`/escrow/payer`** — connect the fixed payer and privately fund the complete one-milestone allowance.
+- **`/escrow/approver`** — initialize the pre-deployed contract once, then approve and atomically release all funds.
+- **`/escrow/receiver`** — connect the fixed receiver and merge released funds into spendable balance.
+
+These role pages execute real SDK and contract calls when `NEXT_PUBLIC_ESCROW_CONTRACT_ID` and the matching USDC deployment variables are configured. `scripts/deploy.ts` writes them to `.env.local` after a successful testnet deployment.
 - **`/wallet`** — connects Freighter, derives your confidential keys, and runs the five operations (register / deposit / merge / transfer / withdraw) with **proofs generated in the browser** (bb.js). Balances are reconstructed locally from chain events and shown with a "matches chain" badge (`StateEngine.verifyAgainstChain`).
 - **`/verify`** — the disclosure receiver: mint a one-time request, verify the returned proof against the chain. No wallet needed.
 - **`/auditor`** — decrypt transfer amounts with the registered auditor key.

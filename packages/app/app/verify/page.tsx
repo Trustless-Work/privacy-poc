@@ -222,7 +222,7 @@ export default function VerifyPage() {
         {result && (
           <section className="rounded border border-emerald-800 bg-emerald-950/30 p-4">
             <h3 className="mb-2 font-medium text-emerald-300">Disclosure verified ✓</h3>
-            <div className="mb-3 text-3xl">{stroopsToXlm(result.amount)} XLM</div>
+            <div className="mb-3 text-3xl">{stroopsToXlm(result.amount)} {active.assetCode}</div>
             <p className="mb-3 text-sm text-neutral-300">
               {result.role === "recipient" ? (
                 <>

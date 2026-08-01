@@ -23,7 +23,7 @@ const ACTIONS: Record<
   deposit: {
     icon: "↓",
     title: "Deposit",
-    hint: "Public XLM → your receiving balance.",
+    hint: "Public underlying asset → your receiving balance.",
     card: "border-sky-500/60 bg-sky-500/15 text-sky-300",
     panel: "border-sky-500/30 bg-sky-500/5",
     btn: "bg-sky-600 hover:bg-sky-500",
@@ -31,7 +31,7 @@ const ACTIONS: Record<
   withdraw: {
     icon: "↑",
     title: "Withdraw",
-    hint: "Spendable → public XLM (to yourself).",
+    hint: "Spendable → public underlying asset (to yourself).",
     card: "border-amber-500/60 bg-amber-500/15 text-amber-300",
     panel: "border-amber-500/30 bg-amber-500/5",
     btn: "bg-amber-600 hover:bg-amber-500",
@@ -163,14 +163,14 @@ export default function Page() {
         </button>
       ) : (
         <div className="space-y-6">
-          <Balances view={view} />
+          <Balances view={view} assetCode={active.assetCode} />
 
           {view?.registered && mergeNotice && showMerge && (
             <div className="flex items-center justify-between gap-3 rounded border border-amber-700 bg-amber-950/40 p-3 text-sm text-amber-300">
               <span>
                 {mergeNotice === "deposit"
-                  ? `Deposit landed in your receiving balance (${stroopsToXlm(view.receiving)} XLM). Merge it before you can transfer or withdraw.`
-                  : `You have an incoming balance of ${stroopsToXlm(view.receiving)} XLM. Merge it to make it spendable.`}
+                  ? `Deposit landed in your receiving balance (${stroopsToXlm(view.receiving)} ${active.assetCode}). Merge it before you can transfer or withdraw.`
+                  : `You have an incoming balance of ${stroopsToXlm(view.receiving)} ${active.assetCode}. Merge it to make it spendable.`}
               </span>
               <div className="flex shrink-0 gap-2">
                 <button
@@ -234,7 +234,7 @@ export default function Page() {
               <div className="p-4">
                 {activeTab === "deposit" && (
                   <ActionPanel action="deposit">
-                    <AmountInput value={depositAmt} onChange={setDepositAmt} className="sm:w-36" />
+                    <AmountInput value={depositAmt} onChange={setDepositAmt} assetCode={active.assetCode} className="sm:w-36" />
                     <button
                       onClick={run("deposit", (w) => w.deposit(xlmToStroops(depositAmt)))}
                       disabled={busy !== null}
@@ -247,7 +247,7 @@ export default function Page() {
 
                 {activeTab === "withdraw" && (
                   <ActionPanel action="withdraw">
-                    <AmountInput value={withdrawAmt} onChange={setWithdrawAmt} className="sm:w-36" />
+                    <AmountInput value={withdrawAmt} onChange={setWithdrawAmt} assetCode={active.assetCode} className="sm:w-36" />
                     <button
                       onClick={run("withdraw", (w) => w.withdraw(xlmToStroops(withdrawAmt), setPhase))}
                       disabled={busy !== null}
@@ -265,7 +265,7 @@ export default function Page() {
                       value={transferTo}
                       onChange={setTransferTo}
                     />
-                    <AmountInput value={transferAmt} onChange={setTransferAmt} className="sm:w-28" />
+                    <AmountInput value={transferAmt} onChange={setTransferAmt} assetCode={active.assetCode} className="sm:w-28" />
                     <button
                       onClick={run("transfer", (w) => w.transfer(transferTo, xlmToStroops(transferAmt), setPhase))}
                       disabled={busy !== null || !transferTo}
@@ -283,7 +283,7 @@ export default function Page() {
                       disabled={busy !== null}
                       className={`${btnCls} ${ACTIONS.merge.btn}`}
                     >
-                      {busy === "merge" ? "Submitting tx…" : `Merge ${stroopsToXlm(view.receiving)} XLM`}
+                      {busy === "merge" ? "Submitting tx…" : `Merge ${stroopsToXlm(view.receiving)} ${active.assetCode}`}
                     </button>
                   </ActionPanel>
                 )}
@@ -367,7 +367,7 @@ function ActionPanel(props: { action: ActionTab; children: React.ReactNode }) {
   );
 }
 
-function Balances({ view }: { view: WalletView | null }) {
+function Balances({ view, assetCode }: { view: WalletView | null; assetCode: string }) {
   if (!view) return null;
   return (
     <section className="rounded border border-neutral-800 p-4">
@@ -385,8 +385,8 @@ function Balances({ view }: { view: WalletView | null }) {
         )}
       </div>
       <div className="grid grid-cols-2 gap-4">
-        <Stat label="Spendable" value={stroopsToXlm(view.spendable)} />
-        <Stat label="Receiving" value={stroopsToXlm(view.receiving)} />
+        <Stat label="Spendable" value={stroopsToXlm(view.spendable)} assetCode={assetCode} />
+        <Stat label="Receiving" value={stroopsToXlm(view.receiving)} assetCode={assetCode} />
       </div>
       <p className="mt-3 text-xs text-neutral-500">
         {view.registered ? `synced through ledger ${view.syncedLedger}` : "not registered yet"}
@@ -395,26 +395,28 @@ function Balances({ view }: { view: WalletView | null }) {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, assetCode }: { label: string; value: string; assetCode: string }) {
   return (
     <div>
       <div className="text-xs uppercase tracking-wide text-neutral-500">{label}</div>
       <div className="text-2xl">
-        {value} <span className="text-sm text-neutral-500">XLM</span>
+        {value} <span className="text-sm text-neutral-500">{assetCode}</span>
       </div>
     </div>
   );
 }
 
-/** XLM amount field: a numeric text input with a trailing "XLM" unit chip. */
+/** Seven-decimal asset amount field with a trailing unit chip. */
 function AmountInput({
   value,
   onChange,
   className = "",
+  assetCode,
 }: {
   value: string;
   onChange: (v: string) => void;
   className?: string;
+  assetCode: string;
 }) {
   return (
     <div className={`relative ${className}`}>
@@ -425,7 +427,7 @@ function AmountInput({
         onChange={(e) => onChange(e.target.value)}
       />
       <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-neutral-500">
-        XLM
+        {assetCode}
       </span>
     </div>
   );
