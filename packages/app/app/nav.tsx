@@ -18,6 +18,7 @@ import { useActiveDeployment } from "@/lib/active-deployment";
 import { hasAdminDashboard } from "@/lib/deployment";
 
 export const PERSONAS = [
+  { href: "/escrow", label: "Escrow walkthrough", text: "text-emerald-300" },
   { href: "/wallet", label: "Account holder", text: "text-indigo-300" },
   { href: "/verify", label: "Disclosure receiver", text: "text-cyan-300" },
   { href: "/auditor", label: "Auditor", text: "text-amber-300" },

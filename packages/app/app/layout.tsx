@@ -4,9 +4,9 @@ import { PersonaNav } from "./nav";
 import { ActiveDeploymentProvider } from "@/lib/active-deployment";
 
 export const metadata: Metadata = {
-  title: "Stellar Confidential Token",
+  title: "Trustless Work — Private Escrow PoC",
   description:
-    "Confidential token transfers on Stellar — on-chain UltraHonk proofs, selective disclosure, and auditability (testnet).",
+    "One-milestone confidential USDC escrow on Stellar with on-chain UltraHonk proofs, selective disclosure, and auditability (testnet).",
 };
 
 // Set the theme class before first paint (no flash). Dark is the canonical

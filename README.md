@@ -69,7 +69,7 @@ The intended circuit change is deliberately narrow: add a zero-remaining-allowan
 
 ## Status
 
-The pinned reference monorepo is imported. The branch now includes the three-entry-point escrow contract, delegated-spending SDK witnesses and XDR submitters, the pinned `SetSpender` funding circuit, a PoC-specific full-release Noir circuit, compiled browser proving artifacts and packed verifier keys, USDC-first deployment configuration, and contract/circuit adversarial tests. The escrow UI and a fresh integrated testnet deployment remain to be built.
+The pinned reference monorepo is imported. The branch now includes the three-entry-point escrow contract, delegated-spending SDK witnesses and XDR submitters, the pinned `SetSpender` funding circuit, a PoC-specific full-release Noir circuit, compiled browser proving artifacts and packed verifier keys, USDC-first deployment configuration, contract/circuit adversarial tests, and a guided six-step escrow walkthrough at `/escrow`. Connecting the walkthrough actions to a fresh integrated USDC testnet deployment remains pending.
 
 ## References
 

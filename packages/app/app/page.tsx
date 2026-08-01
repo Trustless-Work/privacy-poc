@@ -17,6 +17,18 @@ import { ServingBadge } from "./serving-badge";
 
 const PERSONA_CARDS = [
   {
+    href: "/escrow",
+    title: "Private milestone escrow",
+    tagline: "guided PoC flow",
+    accent: "border-emerald-500/40 hover:border-emerald-400/70",
+    cta: "Walk through the escrow →",
+    ctaCls: "text-emerald-300",
+    blurb:
+      "Follow one confidential USDC milestone from wallet preparation and funding through approval, " +
+      "full release, receipt, and disclosure. Every step explains what is public, what stays private, " +
+      "and what the contracts and zero-knowledge proofs enforce.",
+  },
+  {
     href: "/wallet",
     title: "Account holder",
     tagline: "token holder",
