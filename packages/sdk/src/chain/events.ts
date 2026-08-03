@@ -26,6 +26,7 @@ export type ConfidentialEventType =
   | "merge"
   | "withdraw"
   | "transfer"
+  | "spender_transfer"
   | ComplianceEventType;
 
 /**
@@ -99,6 +100,21 @@ export interface TransferEvent extends BaseEvent {
   bAudS: bigint;
 }
 
+/** Delegated confidential transfer emitted when an escrow releases funds. */
+export interface SpenderTransferEvent extends BaseEvent {
+  type: "spender_transfer";
+  spender: string;
+  from: string;
+  to: string;
+  rE: Point;
+  vTilde: bigint;
+  sigmaA: bigint;
+  vAudR: bigint;
+  rAudR: bigint;
+  vAudS: bigint;
+  aAudS: bigint;
+}
+
 /** A compliance/policy membership event ({@link ComplianceEventType}). */
 export interface ComplianceEvent extends BaseEvent {
   type: ComplianceEventType;
@@ -112,6 +128,7 @@ export type ConfidentialEvent =
   | MergeEvent
   | WithdrawEvent
   | TransferEvent
+  | SpenderTransferEvent
   | ComplianceEvent;
 
 /** The event-name symbols this client understands (topic[0]). Shared by the
@@ -122,6 +139,7 @@ export const KNOWN: ReadonlySet<string> = new Set([
   "merge",
   "withdraw",
   "transfer",
+  "spender_transfer",
   "frozen",
   "unfrozen",
   "user_allowed",
@@ -190,6 +208,21 @@ export function buildConfidentialEvent(
         rAudR: data.field("r_aud_r"),
         vAudS: data.field("v_aud_s"),
         bAudS: data.field("b_aud_s"),
+      };
+    case "spender_transfer":
+      return {
+        ...base,
+        type: "spender_transfer",
+        spender: addr(1),
+        from: addr(2),
+        to: addr(3),
+        rE: data.point("r_e"),
+        vTilde: data.field("v_tilde"),
+        sigmaA: data.field("sigma_a"),
+        vAudR: data.field("v_aud_r"),
+        rAudR: data.field("r_aud_r"),
+        vAudS: data.field("v_aud_s"),
+        aAudS: data.field("a_aud_s"),
       };
     case "frozen":
     case "unfrozen":

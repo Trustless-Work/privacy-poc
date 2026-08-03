@@ -15,6 +15,8 @@ export interface Opening {
 
 /** Reconstructed local state for one confidential account. */
 export interface AccountState {
+  /** Schema version for one-time state-reconstruction migrations. */
+  cacheVersion?: number;
   /** Owner's Stellar (G-) address. */
   address: string;
   /** Spendable balance opening (`C_spend`). */
@@ -31,6 +33,7 @@ export interface AccountState {
 
 export function freshState(address: string): AccountState {
   return {
+    cacheVersion: 2,
     address,
     spendable: { v: 0n, r: 0n },
     receiving: { v: 0n, r: 0n },

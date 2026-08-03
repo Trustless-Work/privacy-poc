@@ -29,6 +29,7 @@ export function reviveState(raw: Record<string, unknown>): AccountState {
     r: BigInt(o.r),
   });
   return {
+    cacheVersion: raw.cacheVersion as number | undefined,
     address: raw.address as string,
     spendable: op(raw.spendable as { v: string; r: string }),
     receiving: op(raw.receiving as { v: string; r: string }),
@@ -40,6 +41,7 @@ export function reviveState(raw: Record<string, unknown>): AccountState {
 
 export function cloneState(s: AccountState): AccountState {
   return {
+    cacheVersion: s.cacheVersion,
     address: s.address,
     spendable: { ...s.spendable },
     receiving: { ...s.receiving },

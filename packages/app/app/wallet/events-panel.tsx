@@ -12,7 +12,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import type { ConfidentialEvent, TransferEvent, DisclosureRequest } from "@ctd/sdk";
+import type { ConfidentialEvent, TransferEvent, SpenderTransferEvent, DisclosureRequest } from "@ctd/sdk";
 import type { ConfidentialWallet } from "@/lib/wallet";
 import { useActiveDeployment } from "@/lib/active-deployment";
 import { errMsg } from "@/lib/err";
@@ -87,23 +87,24 @@ type Direction = "received" | "sent" | null;
 function EventRow({ ev, wallet, assetCode }: { ev: ConfidentialEvent; wallet: ConfidentialWallet; assetCode: string }) {
   const [showDisclose, setShowDisclose] = useState(false);
 
-  const direction: Direction =
-    ev.type !== "transfer" ? null : ev.to === wallet.address ? "received" : "sent";
+  const isPayment = ev.type === "transfer" || ev.type === "spender_transfer";
+  const direction: Direction = !isPayment ? null : ev.to === wallet.address ? "received" : "sent";
   // Sender disclosure re-derives the ephemeral scalar from this wallet's keys.
   const canDisclose =
-    direction === "received" || (direction === "sent" && wallet.canDiscloseSent(ev as TransferEvent));
+    ev.type === "transfer" &&
+    (direction === "received" || (direction === "sent" && wallet.canDiscloseSent(ev)));
 
   // Transfer amounts are confidential on-chain but decryptable by either party.
   // Decrypt for display; `loading` until resolved, `value` null if unrecoverable.
   const [amt, setAmt] = useState<{ loading: boolean; value: bigint | null }>({
-    loading: ev.type === "transfer",
+    loading: isPayment,
     value: null,
   });
   useEffect(() => {
-    if (ev.type !== "transfer") return;
+    if (ev.type !== "transfer" && ev.type !== "spender_transfer") return;
     let cancelled = false;
     wallet
-      .transferAmount(ev as TransferEvent)
+      .transferAmount(ev as TransferEvent | SpenderTransferEvent)
       .then((value) => !cancelled && setAmt({ loading: false, value }))
       .catch(() => !cancelled && setAmt({ loading: false, value: null }));
     return () => {
@@ -137,7 +138,7 @@ function EventRow({ ev, wallet, assetCode }: { ev: ConfidentialEvent; wallet: Co
         )}
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-neutral-400">
-        {summary(ev, wallet.address, ev.type === "transfer" ? amt : undefined, assetCode)}
+        {summary(ev, wallet.address, isPayment ? amt : undefined, assetCode)}
       </div>
       {showDisclose && direction && (
         <DiscloseFlow ev={ev as TransferEvent} direction={direction} wallet={wallet} />
@@ -306,6 +307,20 @@ function summary(
           <span className="font-medium text-orange-300">to</span> {who(ev.to)}{" "}
           <span className="text-neutral-600">·</span> <TransferAmount amt={amt} assetCode={assetCode} />
           <Muted>(confidential)</Muted>
+        </>
+      );
+    }
+    case "spender_transfer": {
+      const amt = transferAmt ?? { loading: false, value: null };
+      return ev.to === me ? (
+        <>
+          <span className="font-medium text-emerald-300">escrow release from</span> {who(ev.from)}{" "}
+          <span className="text-neutral-600">·</span> <TransferAmount amt={amt} assetCode={assetCode} />
+          <Muted>(confidential)</Muted>
+        </>
+      ) : (
+        <>
+          <span className="font-medium text-orange-300">escrow released to</span> {who(ev.to)}
         </>
       );
     }

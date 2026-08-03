@@ -11,6 +11,7 @@
  *   - register(me)        → mark registered.
  *   - deposit(_, me)      → receiving += (amount, 0)   [deposits carry r = 0].
  *   - transfer(other, me) → ECDH-decrypt (v_tx, r_tx); receiving += (v_tx, r_tx).
+ *   - spender_transfer(_, _, me) → same recipient credit as transfer (escrow release).
  *   - merge(me)           → spendable += receiving; receiving = (0, 0).
  *   - withdraw(me, _)     → spendable = open(b_tilde, sigma)  [event encodes v_new].
  *   - transfer(me, _)     → spendable = open(b_tilde, sigma).
@@ -36,6 +37,8 @@ import { hybridFetchEvents } from "../chain/event-source.js";
 import type { IndexerClient } from "../chain/indexer.js";
 import type { StateStore } from "./store.js";
 import { freshState, type AccountState, type Opening } from "./types.js";
+
+const STATE_CACHE_VERSION = 2;
 
 export interface StateEngineConfig {
   client: ChainClient;
@@ -113,6 +116,15 @@ export class StateEngine {
           };
         }
         break;
+      case "spender_transfer":
+        if (ev.to === me) {
+          const { vTx, rTx } = this.decryptIncoming(ev.rE, ev.vTilde, ev.sigmaA);
+          state.receiving = {
+            v: state.receiving.v + vTx,
+            r: fpAdd(state.receiving.r, rTx),
+          };
+        }
+        break;
     }
     state.syncedLedger = Math.max(state.syncedLedger, ev.ledger);
   }
@@ -124,6 +136,23 @@ export class StateEngine {
   async sync(): Promise<AccountState> {
     const prior = await this.cfg.store.load(this.cfg.address);
     const state = prior ?? freshState(this.cfg.address);
+    const recoveredIds = new Set<string>();
+
+    // v1 ignored escrow-release events entirely. Existing browsers may have a
+    // cursor beyond the release, so replay only the newly-supported event type
+    // once from deployment history before resuming normal incremental sync.
+    if (prior && (state.cacheVersion ?? 1) < STATE_CACHE_VERSION) {
+      const recovery = await hybridFetchEvents(this.cfg.client, this.cfg.indexer, {
+        fromLedger: this.cfg.fromLedger,
+      });
+      for (const ev of recovery.events) {
+        if (ev.type === "spender_transfer") {
+          this.apply(state, ev);
+          recoveredIds.add(ev.cursor);
+        }
+      }
+      state.cacheVersion = STATE_CACHE_VERSION;
+    }
 
     const { events, cursor, latestLedger } = await hybridFetchEvents(
       this.cfg.client,
@@ -131,8 +160,11 @@ export class StateEngine {
       { fromLedger: this.cfg.fromLedger, startCursor: state.cursor },
     );
 
-    for (const ev of events) this.apply(state, ev);
+    for (const ev of events) {
+      if (!recoveredIds.has(ev.cursor)) this.apply(state, ev);
+    }
     if (cursor) state.cursor = cursor;
+    state.cacheVersion = STATE_CACHE_VERSION;
     state.syncedLedger = Math.max(state.syncedLedger, latestLedger);
 
     await this.cfg.store.save(state);

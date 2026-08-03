@@ -20,6 +20,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   hybridFetchEvents,
   auditTransfer,
+  auditSpenderTransfer,
   auditWithdraw,
   auditorPublicKey,
   pointCoords,
@@ -140,6 +141,24 @@ function replay(
             : "transfer did NOT decrypt under this key",
           amount: d.channelsAgree ? d.amount : null,
           senderBalance: d.channelsAgree ? d.senderBalance : null,
+          channelsAgree: d.channelsAgree,
+        });
+        break;
+      }
+      case "spender_transfer": {
+        seen(ev.from, ev.ledger);
+        const to = seen(ev.to, ev.ledger);
+        const d = auditSpenderTransfer(auditorSk, ev);
+        if (d.channelsAgree) to.receiving += d.amount;
+        rows.push({
+          ev,
+          text: d.channelsAgree
+            ? "escrow release — both channels decrypted"
+            : "escrow release did NOT decrypt under this key",
+          amount: d.channelsAgree ? d.amount : null,
+          // This event checkpoints the remaining allowance, not the payer's
+          // spendable balance, so do not overwrite the account balance view.
+          senderBalance: null,
           channelsAgree: d.channelsAgree,
         });
         break;

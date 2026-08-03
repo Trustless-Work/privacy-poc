@@ -26,7 +26,7 @@ import { H, ecdh, scalarMul, type Point } from "../crypto/grumpkin.js";
 import { frMod } from "../crypto/field.js";
 import { DOMAIN } from "../crypto/constants.js";
 import { spongeSqueeze2, decryptWithDomain } from "../crypto/poseidon2.js";
-import type { TransferEvent, WithdrawEvent } from "../chain/events.js";
+import type { SpenderTransferEvent, TransferEvent, WithdrawEvent } from "../chain/events.js";
 
 /** What the sender's auditor learns from one transfer (§8.1, T_a5–T_a8). */
 export interface AuditedSenderChannel {
@@ -93,6 +93,32 @@ export function auditTransfer(k: bigint, ev: TransferEvent): AuditedTransfer {
     senderBalance: s.senderBalance,
     rTx: r.rTx,
     channelsAgree: s.amount === r.amount,
+  };
+}
+
+/** What an auditor learns from an escrow's delegated release. */
+export interface AuditedSpenderTransfer {
+  amount: bigint;
+  allowanceBalance: bigint;
+  rTx: bigint;
+  channelsAgree: boolean;
+}
+
+/** Decrypt both auditor channels of a delegated (escrow) transfer. */
+export function auditSpenderTransfer(
+  k: bigint,
+  ev: SpenderTransferEvent,
+): AuditedSpenderTransfer {
+  const sX = ecdh(k, ev.rE);
+  const [mVR, mR] = spongeSqueeze2(DOMAIN.AUDITOR_RECIPIENT, sX, ev.sigmaA);
+  const [mVS, mA] = spongeSqueeze2(DOMAIN.AUDITOR_SENDER, sX, ev.sigmaA);
+  const recipientAmount = frMod(ev.vAudR - mVR);
+  const senderAmount = frMod(ev.vAudS - mVS);
+  return {
+    amount: senderAmount,
+    allowanceBalance: frMod(ev.aAudS - mA),
+    rTx: frMod(ev.rAudR - mR),
+    channelsAgree: senderAmount === recipientAmount,
   };
 }
 

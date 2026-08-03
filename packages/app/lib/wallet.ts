@@ -46,6 +46,7 @@ import {
   DOMAIN,
   type ConfidentialEvent,
   type TransferEvent,
+  type SpenderTransferEvent,
   type DisclosureRequest,
   type DisclosureBundle,
 } from "@ctd/sdk";
@@ -352,6 +353,7 @@ export class ConfidentialWallet {
       case "deposit":
       case "withdraw":
       case "transfer":
+      case "spender_transfer":
         return ev.from === this.address || ev.to === this.address;
       default:
         // Compliance/policy membership events are surfaced in the admin
@@ -393,12 +395,13 @@ export class ConfidentialWallet {
    * not built with these keys (non-deterministic r_e), or a recipient with no
    * on-chain account record. The amount stays confidential on-chain regardless.
    */
-  async transferAmount(event: TransferEvent): Promise<bigint | null> {
+  async transferAmount(event: TransferEvent | SpenderTransferEvent): Promise<bigint | null> {
+    const sigma = event.type === "spender_transfer" ? event.sigmaA : event.sigma;
     // Inbound path also covers a self-transfer (to === from === me).
     if (event.to === this.address) {
-      return this.engine.decryptIncoming(event.rE, event.vTilde, event.sigma).vTx;
+      return this.engine.decryptIncoming(event.rE, event.vTilde, sigma).vTx;
     }
-    if (event.from === this.address) {
+    if (event.type === "transfer" && event.from === this.address) {
       const rEScalar = this.recoverRE(event);
       if (rEScalar === null) return null;
       const recipient = await this.client.confidentialBalance(event.to);
