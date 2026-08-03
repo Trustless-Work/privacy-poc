@@ -2,20 +2,208 @@
 @tailwind components;
 @tailwind utilities;
 
-/* color-scheme is set per theme by the inversion plugin (:root = light, .dark = dark). */
+/*
+ * Functional neo-brutalism for the PoC.
+ * The named tokens keep the five-color palette semantic instead of decorative:
+ * orange = action, yellow = guidance, lime = success, olive = verified,
+ * amber = secondary emphasis.
+ */
+:root {
+  --nb-bg: #fffbed;
+  --nb-surface: #ffffff;
+  --nb-surface-muted: #f7f1d5;
+  --nb-ink: #151515;
+  --nb-primary: #fb6107;
+  --nb-guide: #f3de2c;
+  --nb-success: #7cb518;
+  --nb-verified: #5c8001;
+  --nb-secondary: #fbb02d;
+  --nb-shadow: 4px 4px 0 var(--nb-ink);
+  --nb-shadow-sm: 2px 2px 0 var(--nb-ink);
+}
+
+.dark {
+  --nb-bg: #15170f;
+  --nb-surface: #242719;
+  --nb-surface-muted: #30351e;
+  --nb-ink: #fffbed;
+  --nb-shadow: 4px 4px 0 #000;
+  --nb-shadow-sm: 2px 2px 0 #000;
+}
 
 body {
-  @apply bg-neutral-950 text-neutral-100 antialiased;
+  background-color: var(--nb-bg);
+  color: var(--nb-ink);
+  background-image: radial-gradient(color-mix(in srgb, var(--nb-ink) 12%, transparent) 0.8px, transparent 0.8px);
+  background-size: 18px 18px;
+  @apply antialiased;
 }
 
 @layer base {
-  /* OZ brand indigo for selection + focus, for an institutional, accessible feel. */
   ::selection {
-    background-color: rgb(99 102 241 / 0.32);
+    background-color: var(--nb-guide);
+    color: #151515;
   }
 
   *:focus-visible {
-    outline: 2px solid rgb(99 102 241 / 0.7);
-    outline-offset: 2px;
+    outline: 3px solid var(--nb-primary);
+    outline-offset: 3px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: Arial Black, Arial, ui-sans-serif, system-ui, sans-serif;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    border-radius: 2px !important;
+  }
+
+  button:not(:disabled) {
+    transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+  }
+
+  button:not(:disabled):active {
+    transform: translate(2px, 2px);
+    box-shadow: none !important;
+  }
+
+  input,
+  textarea,
+  select {
+    border-width: 2px !important;
+    border-color: var(--nb-ink) !important;
+    background: var(--nb-surface) !important;
+    color: var(--nb-ink) !important;
+  }
+}
+
+@layer components {
+  .nb-nav {
+    border-bottom: 3px solid var(--nb-ink);
+    background: color-mix(in srgb, var(--nb-bg) 94%, transparent);
+  }
+
+  .nb-brand-mark {
+    display: grid;
+    height: 2rem;
+    width: 2rem;
+    place-items: center;
+    border: 2px solid var(--nb-ink);
+    background: var(--nb-primary);
+    color: #151515;
+    box-shadow: var(--nb-shadow-sm);
+  }
+
+  .nb-kicker {
+    display: inline-block;
+    border: 2px solid var(--nb-ink);
+    background: var(--nb-guide);
+    color: #151515;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    box-shadow: var(--nb-shadow-sm);
+  }
+
+  .nb-title {
+    max-width: 18ch;
+    font-size: clamp(2rem, 6vw, 3.4rem);
+    font-weight: 900;
+    line-height: 0.98;
+    letter-spacing: -0.055em;
+    text-transform: uppercase;
+  }
+
+  .nb-card {
+    border: 3px solid var(--nb-ink) !important;
+    border-radius: 3px !important;
+    background: var(--nb-surface) !important;
+    color: var(--nb-ink);
+    box-shadow: var(--nb-shadow);
+  }
+
+  .nb-card-guide {
+    border: 3px solid var(--nb-ink) !important;
+    border-radius: 3px !important;
+    background: var(--nb-guide) !important;
+    color: #151515 !important;
+    box-shadow: var(--nb-shadow);
+  }
+
+  .nb-card-success {
+    border: 2px solid var(--nb-ink) !important;
+    border-radius: 2px !important;
+    background: var(--nb-success) !important;
+    color: #151515 !important;
+    box-shadow: var(--nb-shadow-sm);
+  }
+
+  .nb-chip {
+    border: 2px solid var(--nb-ink) !important;
+    border-radius: 999px !important;
+    background: var(--nb-secondary) !important;
+    color: #151515 !important;
+    font-weight: 800;
+  }
+
+  .nb-control {
+    border: 2px solid var(--nb-ink) !important;
+    border-radius: 2px !important;
+    background: var(--nb-surface) !important;
+    color: var(--nb-ink) !important;
+    box-shadow: var(--nb-shadow-sm);
+    font-weight: 800;
+  }
+
+  .nb-control:hover:not(:disabled) {
+    background: var(--nb-guide) !important;
+  }
+
+  .nb-action {
+    border: 2px solid var(--nb-ink) !important;
+    border-radius: 2px !important;
+    background: var(--nb-primary) !important;
+    color: #151515 !important;
+    box-shadow: var(--nb-shadow);
+    font-weight: 900;
+  }
+
+  .nb-action:hover:not(:disabled) {
+    filter: saturate(1.15) brightness(1.04);
+    transform: translate(-1px, -1px);
+    box-shadow: 5px 5px 0 var(--nb-ink);
+  }
+
+  .nb-menu {
+    border: 2px solid var(--nb-ink) !important;
+    border-radius: 2px !important;
+    background: var(--nb-surface) !important;
+    box-shadow: var(--nb-shadow);
+  }
+
+  .nb-rule {
+    height: 3px;
+    background: var(--nb-ink);
+  }
+
+  /* Lift the legacy action controls into the same system while pages migrate
+     toward the named primitives above. These selectors change presentation
+     only; disabled states and every existing handler remain untouched. */
+  :where(button, a)[class*="bg-"][class*="px-"] {
+    border: 2px solid var(--nb-ink);
+    border-radius: 2px !important;
+    box-shadow: var(--nb-shadow-sm);
+    font-weight: 800;
+  }
+
+  :where(button, a)[class*="bg-"][class*="px-"]:hover:not(:disabled) {
+    transform: translate(-1px, -1px);
   }
 }

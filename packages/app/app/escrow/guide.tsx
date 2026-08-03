@@ -18,13 +18,13 @@ export function BeginnerGuide({
   next?: { href: string; label: string };
 }) {
   return (
-    <section className="rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-5">
+    <section className="nb-card p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-indigo-300">{step}</p>
-          <h2 className="mt-1 text-lg font-semibold text-neutral-100">{title}</h2>
+          <p className="nb-kicker">{step}</p>
+          <h2 className="mt-3 text-xl font-black uppercase">{title}</h2>
         </div>
-        <span className="rounded-full border border-indigo-400/30 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-200">
+        <span className="nb-chip px-3 py-1 text-xs">
           Use: {account}
         </span>
       </div>
@@ -35,7 +35,7 @@ export function BeginnerGuide({
           <ul className="mt-3 space-y-2">
             {before.map((item) => (
               <li key={item} className="flex gap-2 text-sm leading-relaxed text-neutral-300">
-                <span aria-hidden className="mt-0.5 text-amber-300">□</span>
+                <span aria-hidden className="mt-0.5 font-black text-amber-300">□</span>
                 <span>{item}</span>
               </li>
             ))}
@@ -46,7 +46,7 @@ export function BeginnerGuide({
           <ol className="mt-3 space-y-2">
             {actions.map((item, index) => (
               <li key={item} className="flex gap-3 text-sm leading-relaxed text-neutral-200">
-                <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-indigo-500/20 text-[11px] font-semibold text-indigo-200">
+                <span className="grid h-5 w-5 shrink-0 place-items-center border-2 border-neutral-950 bg-orange-500 text-[11px] font-black text-neutral-950">
                   {index + 1}
                 </span>
                 <span>{item}</span>
@@ -56,7 +56,7 @@ export function BeginnerGuide({
         </div>
       </div>
 
-      <div className="mt-5 rounded-lg border border-emerald-500/25 bg-emerald-500/5 p-3 text-sm text-emerald-200">
+      <div className="nb-card-success mt-5 p-3 text-sm">
         <strong className="font-semibold">Success looks like:</strong> {expected}
       </div>
 
@@ -71,8 +71,8 @@ export function BeginnerGuide({
 
 export function AccountSwitchReminder() {
   return (
-    <div className="rounded-lg border border-amber-500/25 bg-amber-500/5 p-4 text-sm leading-relaxed text-neutral-300">
-      <strong className="text-amber-200">Changed accounts in Freighter?</strong>{" "}
+    <div className="nb-card-guide p-4 text-sm leading-relaxed">
+      <strong className="font-black uppercase">Changed accounts in Freighter?</strong>{" "}
       Refresh this page, connect again, and verify the displayed <code className="text-xs text-neutral-100">G…</code> address before submitting.
     </div>
   );

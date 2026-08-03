@@ -35,26 +35,27 @@ const ADMIN_PERSONA = { href: "/admin", label: "Token admin", text: "text-rose-3
 
 type Persona = { href: string; label: string; text: string };
 
-/** Minimal shield mark — a security motif in the OZ brand indigo. */
+/** Bold escrow mark — a compact lockbox for the neo-brutalist wordmark. */
 function ShieldMark() {
   return (
-    <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5 text-indigo-400" fill="none">
+    <span className="nb-brand-mark" aria-hidden>
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none">
       <path
         d="M12 2.5 19 5.5 V11 C19 15.6 16 19.1 12 21 C8 19.1 5 15.6 5 11 V5.5 Z"
-        fill="currentColor"
-        fillOpacity="0.16"
+        fill="#F3DE2C"
         stroke="currentColor"
-        strokeWidth="1.5"
+        strokeWidth="2.2"
         strokeLinejoin="round"
       />
       <path
         d="M9 11.6 11.2 13.8 15.2 9.4"
         stroke="currentColor"
-        strokeWidth="1.6"
+        strokeWidth="2.2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
     </svg>
+    </span>
   );
 }
 
@@ -116,9 +117,7 @@ function Dropdown({
         title={disabled ? disabledTitle : undefined}
         aria-haspopup="menu"
         aria-expanded={open}
-        className={`flex items-center gap-1.5 rounded border px-2.5 py-1.5 text-xs font-medium transition-colors hover:border-neutral-600 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-neutral-800 ${
-          open ? "border-neutral-600" : "border-neutral-800"
-        } ${triggerCls}`}
+        className={`nb-control flex items-center gap-1.5 px-2.5 py-1.5 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${triggerCls}`}
       >
         {triggerText}
         <Chevron />
@@ -127,7 +126,7 @@ function Dropdown({
         <div
           role="menu"
           onClick={() => setOpen(false)}
-          className="absolute right-0 top-full z-30 mt-1 min-w-[12rem] overflow-hidden rounded border border-neutral-800 bg-neutral-950 py-1 shadow-lg shadow-black/40"
+          className="nb-menu absolute right-0 top-full z-30 mt-2 min-w-[12rem] overflow-hidden py-1"
         >
           {children}
         </div>
@@ -167,13 +166,13 @@ function DeploymentToggle() {
   return (
     <div className="flex items-center gap-1.5">
       <span className="hidden text-xs text-neutral-600 sm:inline">Deployment</span>
-      <div className="inline-flex items-center rounded-md border border-neutral-800 p-0.5">
+      <div className="nb-control inline-flex items-center p-0.5">
         <button
           type="button"
           aria-pressed={!advancedContext}
           onClick={selectDefault}
           className={`${SEG_BASE} ${
-            !advancedContext ? "bg-neutral-800 text-neutral-100" : "text-neutral-400 hover:text-neutral-200"
+            !advancedContext ? "bg-orange-500 text-neutral-950" : "text-neutral-400 hover:text-neutral-200"
           }`}
         >
           Default
@@ -184,7 +183,7 @@ function DeploymentToggle() {
           onClick={selectAdvanced}
           title={advanced ? undefined : "Deploy your own token"}
           className={`${SEG_BASE} ${
-            advancedContext ? "bg-neutral-800 text-emerald-300" : "text-neutral-400 hover:text-neutral-200"
+            advancedContext ? "bg-amber-400 text-neutral-950" : "text-neutral-400 hover:text-neutral-200"
           }`}
         >
           Advanced
@@ -256,11 +255,11 @@ function EscrowDropdown() {
 
 export function PersonaNav() {
   return (
-    <nav className="sticky top-0 z-20 border-b border-neutral-800 bg-neutral-950/80 backdrop-blur">
-      <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3">
+    <nav className="nb-nav sticky top-0 z-20 backdrop-blur">
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-3 gap-y-3 px-5 py-3">
         <Link href="/" className="mr-1 flex items-center gap-2">
           <ShieldMark />
-          <span className="hidden text-sm text-neutral-500 sm:inline">Stellar Confidential Token</span>
+          <span className="hidden text-sm font-black uppercase tracking-tight sm:inline">Trustless Work <span className="text-orange-500">/ Private</span></span>
         </Link>
         <span className="flex-1" />
         <DeploymentToggle />

@@ -31,13 +31,13 @@ export function ServingBadge({ className = "" }: { className?: string }) {
 
   return (
     <div
-      className={`inline-flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border px-3 py-2 text-xs transition-all ease-out ${
+      className={`nb-control inline-flex flex-wrap items-center gap-x-2 gap-y-1 px-3 py-2 text-xs transition-all ease-out ${
         justUpdated
-          ? "duration-200 scale-[1.04] border-emerald-500/70 bg-emerald-500/10 shadow-[0_0_12px_-2px_rgb(16_185_129/0.4)]"
-          : "duration-700 scale-100 border-neutral-800 bg-neutral-900/50 shadow-[0_0_12px_-2px_rgb(16_185_129/0)]"
+          ? "duration-200 scale-[1.04]"
+          : "duration-700 scale-100"
       } ${className}`}
     >
-      <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-400 ring-2 ring-emerald-400/20" aria-hidden />
+      <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-400 ring-2 ring-neutral-950" aria-hidden />
       <span className="text-neutral-500">Serving</span>
       <Addr value={active.contracts.token} className="font-medium text-neutral-200" />
       <span className="text-neutral-600">—</span>

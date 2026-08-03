@@ -150,10 +150,10 @@ const STEPS: Step[] = [
 ];
 
 const actorTone: Record<Step["actor"], string> = {
-  Setup: "border-neutral-500/40 bg-neutral-500/10 text-neutral-300",
-  Payer: "border-sky-500/40 bg-sky-500/10 text-sky-300",
-  Approver: "border-violet-500/40 bg-violet-500/10 text-violet-300",
-  Receiver: "border-emerald-500/40 bg-emerald-500/10 text-emerald-300",
+  Setup: "bg-amber-400 text-neutral-950",
+  Payer: "bg-orange-500 text-neutral-950",
+  Approver: "bg-amber-300 text-neutral-950",
+  Receiver: "bg-emerald-500 text-neutral-950",
 };
 
 export default function EscrowWalkthroughPage() {
@@ -163,17 +163,15 @@ export default function EscrowWalkthroughPage() {
   const escrow = active.contracts.escrow;
 
   return (
-    <main className="mx-auto max-w-5xl px-5 py-10">
-      <header className="mb-8">
+    <main className="mx-auto max-w-5xl px-5 py-10 sm:py-14">
+      <header className="mb-10">
         <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
-          <span className="rounded-full border border-rose-500/40 bg-rose-500/10 px-2.5 py-1 font-medium text-rose-300">
-            Testnet PoC
-          </span>
-          <span className="rounded-full border border-neutral-800 bg-neutral-900 px-2.5 py-1 text-neutral-400">
+          <span className="nb-kicker">Testnet PoC</span>
+          <span className="nb-chip px-2.5 py-1">
             One milestone · One approval · Full release
           </span>
         </div>
-        <h1 className="text-3xl font-semibold tracking-tight">Private milestone escrow</h1>
+        <h1 className="nb-title">Private milestone escrow</h1>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-neutral-400">
           Follow one confidential USDC payment from funding to release. The people and lifecycle
           remain visible on Stellar; the milestone amount and balances remain private.
@@ -181,7 +179,7 @@ export default function EscrowWalkthroughPage() {
       </header>
 
       {!escrow && (
-        <div className="mb-7 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
+        <div className="nb-card-guide mb-8 p-4">
           <div className="flex gap-3">
             <span aria-hidden className="mt-0.5 text-amber-300">●</span>
             <div>
@@ -202,7 +200,7 @@ export default function EscrowWalkthroughPage() {
             return (
               <li key={item.id} className="relative flex flex-1 items-start">
                 {index < STEPS.length - 1 && (
-                  <span className="absolute left-7 right-0 top-4 h-px bg-neutral-800" aria-hidden />
+                  <span className="absolute left-7 right-0 top-4 h-[3px] bg-neutral-800" aria-hidden />
                 )}
                 <button
                   type="button"
@@ -211,10 +209,10 @@ export default function EscrowWalkthroughPage() {
                   className="relative z-10 flex w-full flex-col items-start text-left"
                 >
                   <span
-                    className={`grid h-8 w-8 place-items-center rounded-full border text-xs font-semibold transition-colors ${
+                    className={`grid h-8 w-8 place-items-center border-2 border-neutral-950 text-xs font-black transition-colors ${
                       activeStep
-                        ? "border-indigo-400 bg-indigo-500 text-white"
-                        : "border-neutral-700 bg-neutral-950 text-neutral-500 hover:border-neutral-500"
+                        ? "bg-orange-500 text-neutral-950 shadow-[2px_2px_0_#151515]"
+                        : "bg-neutral-950 text-neutral-500 hover:bg-amber-300 hover:text-neutral-950"
                     }`}
                   >
                     {item.id}
@@ -230,10 +228,10 @@ export default function EscrowWalkthroughPage() {
       </section>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
-        <section className="rounded-xl border border-neutral-800 bg-neutral-900/30 p-5 sm:p-6">
+        <section className="nb-card p-5 sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <span className="grid h-9 w-9 place-items-center rounded-full bg-indigo-500/15 text-sm font-semibold text-indigo-300">
+              <span className="grid h-9 w-9 place-items-center border-2 border-neutral-950 bg-orange-500 text-sm font-black text-neutral-950 shadow-[2px_2px_0_#151515]">
                 {step.id}
               </span>
               <div>
@@ -241,19 +239,19 @@ export default function EscrowWalkthroughPage() {
                 <h2 className="text-lg font-semibold">{step.title}</h2>
               </div>
             </div>
-            <span className={`rounded-full border px-2.5 py-1 text-xs font-medium ${actorTone[step.actor]}`}>
+            <span className={`rounded-full border-2 border-neutral-950 px-2.5 py-1 text-xs font-black shadow-[2px_2px_0_#151515] ${actorTone[step.actor]}`}>
               {step.actor}
             </span>
           </div>
 
           <p className="mt-5 text-sm leading-relaxed text-neutral-300">{step.summary}</p>
 
-          <div className="mt-6 rounded-lg border border-neutral-800 bg-neutral-950/50 p-4">
+          <div className="mt-6 border-l-4 border-neutral-950 bg-amber-300/20 p-4">
             <p className="text-xs font-medium uppercase tracking-wider text-neutral-500">Do this</p>
             <ol className="mt-3 space-y-3">
               {step.mechanics.map((item, index) => (
                 <li key={item} className="flex gap-3 text-sm leading-relaxed text-neutral-300">
-                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-neutral-800 text-[10px] text-neutral-400">
+                  <span className="grid h-5 w-5 shrink-0 place-items-center border-2 border-neutral-950 bg-amber-300 text-[10px] font-black text-neutral-950">
                     {index + 1}
                   </span>
                   {item}
@@ -262,12 +260,12 @@ export default function EscrowWalkthroughPage() {
             </ol>
           </div>
 
-          <div className="mt-4 rounded-lg border border-emerald-500/25 bg-emerald-500/5 p-3 text-sm text-emerald-200">
+          <div className="nb-card-success mt-5 p-3 text-sm">
             <strong className="font-semibold">Success looks like:</strong> {step.expected}
           </div>
 
           {escrow || step.id <= 4 ? (
-            <Link href={step.href} className="mt-6 block w-full rounded-lg bg-indigo-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-indigo-500">
+            <Link href={step.href} className="nb-action mt-6 block w-full px-4 py-3 text-center text-sm">
               {step.action}
             </Link>
           ) : (
@@ -281,7 +279,7 @@ export default function EscrowWalkthroughPage() {
           <VisibilityCard title="Visible on-chain" tone="public" items={step.public} />
           <VisibilityCard title="Kept confidential" tone="private" items={step.private} />
 
-          <section className="rounded-lg border border-neutral-800 p-4 text-xs">
+          <section className="nb-card p-4 text-xs">
             <p className="font-medium text-neutral-300">Active contracts</p>
             <dl className="mt-3 space-y-2 text-neutral-500">
               <div className="flex items-center justify-between gap-3">
@@ -301,7 +299,7 @@ export default function EscrowWalkthroughPage() {
         </aside>
       </div>
 
-      <section className="mt-7 rounded-lg border border-neutral-800 p-4 text-xs leading-relaxed text-neutral-500">
+      <section className="nb-card mt-8 p-4 text-xs leading-relaxed text-neutral-500">
         <strong className="font-medium text-neutral-300">Known v0 limitation:</strong> the payer can revoke or let the
         confidential allowance expire before approval. Release then fails safely and the escrow remains Funded.
       </section>
@@ -319,10 +317,10 @@ function VisibilityCard({
   items: string[];
 }) {
   const styles = tone === "public"
-    ? "border-sky-500/25 bg-sky-500/5 text-sky-300"
-    : "border-emerald-500/25 bg-emerald-500/5 text-emerald-300";
+    ? "bg-amber-300 text-neutral-950"
+    : "bg-emerald-500 text-neutral-950";
   return (
-    <section className={`rounded-lg border p-4 ${styles}`}>
+    <section className={`rounded-sm border-[3px] border-neutral-950 p-4 shadow-[4px_4px_0_#151515] ${styles}`}>
       <h3 className="text-xs font-semibold uppercase tracking-wider">{title}</h3>
       <ul className="mt-3 space-y-2 text-xs text-neutral-400">
         {items.map((item) => (

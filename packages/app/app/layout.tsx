@@ -9,9 +9,9 @@ export const metadata: Metadata = {
     "One-milestone confidential USDC escrow on Stellar with on-chain UltraHonk proofs, selective disclosure, and auditability (testnet).",
 };
 
-// Set the theme class before first paint (no flash). Dark is the canonical
-// default; honor a stored choice, else fall back to the OS preference.
-const themeInit = `(function(){try{var t=localStorage.getItem('theme');if(t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.classList.add('dark');}}catch(e){document.documentElement.classList.add('dark');}})();`;
+// The high-contrast light palette is the canonical neo-brutalist presentation.
+// Keep a user-selected dark theme, but do not let OS defaults silently override it.
+const themeInit = `(function(){try{if(localStorage.getItem('theme')==='dark'){document.documentElement.classList.add('dark');}}catch(e){}})();`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

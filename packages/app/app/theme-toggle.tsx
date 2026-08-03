@@ -10,9 +10,7 @@
 import { useEffect, useState } from "react";
 
 export function ThemeToggle() {
-  // Render as dark on the server (canonical default) to match the head script's
-  // common case; the effect corrects it after mount, so there's no color flash.
-  const [dark, setDark] = useState(true);
+  const [dark, setDark] = useState(false);
 
   useEffect(() => {
     setDark(document.documentElement.classList.contains("dark"));
@@ -35,7 +33,7 @@ export function ThemeToggle() {
       onClick={toggle}
       aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
       title={dark ? "Switch to light theme" : "Switch to dark theme"}
-      className="rounded border border-neutral-800 p-1.5 text-neutral-400 transition-colors hover:border-neutral-600 hover:text-neutral-200"
+      className="nb-control p-1.5"
     >
       {dark ? <SunIcon /> : <MoonIcon />}
     </button>
