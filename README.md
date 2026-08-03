@@ -1,81 +1,85 @@
 # Trustless Work Privacy PoC
 
-A testnet proof of concept for milestone escrow using Stellar Confidential Tokens with USDC as the intended underlying SEP-41 asset.
+A Stellar testnet proof of concept for milestone escrow using Confidential Tokens with USDC as the underlying SEP-41 asset.
 
 > [!WARNING]
 > This repository evaluates developer-preview cryptography. The Confidential Token circuits and UltraHonk verifier are not production-ready or approved for mainnet. Do not use real value.
 
-## Research question
+## What works today
 
-Can one approver atomically release an entire confidential USDC allowance to one receiver without revealing its amount on-chain?
+The PoC now demonstrates the complete confidential escrow lifecycle:
 
-## Scope
+- An Approver can create multiple independent escrow contracts from a shared factory using Freighter.
+- The same Payer, Approver, and Receiver addresses can be reused across instances.
+- The browser retains an escrow history and lets the user switch the active instance.
+- The Payer deposits testnet USDC, merges it into a private spendable balance, and funds an escrow with a confidential allowance.
+- The Approver releases the complete allowance atomically.
+- The Receiver reconstructs the release from the token's `spender_transfer` event, merges it into private spendable funds, and can withdraw to public USDC.
+- An Auditor can decrypt supported confidential activity with the configured auditor key.
+- A neo-brutalist UI and guided seven-step walkthrough are available at `/escrow`.
 
-The first PoC implements one escrow, treated as one milestone, with known counterparties.
+The core research question has been answered positively: an escrow contract can act as an authorized confidential spender and atomically release the complete private allowance to a fixed Receiver without revealing the amount on-chain.
 
-- **Public:** payer and receiver addresses, escrow roles, lifecycle status, approvals, and timestamps.
-- **Confidential:** escrow amount, milestone amount, internal transfer amount, and confidential balances.
-- **Controlled disclosure:** a designated auditor can decrypt amounts, and the receiver can selectively prove a specific payment.
+## Confidential balance lifecycle
 
-## Architecture
+```text
+Public USDC
+  -> Deposit
+Private Receiving
+  -> Merge
+Private Spendable
+  -> Fund escrow
+Private Allowance
+  -> Approver release
+Receiver Private Receiving
+  -> Merge
+Receiver Private Spendable
+  -> Withdraw
+Public USDC
+```
 
-This repository reuses the package boundaries and protocol implementation from [brozorec/stellar-confidential-token-demo](https://github.com/brozorec/stellar-confidential-token-demo), while adding a Trustless Work escrow integration as a separate contract and SDK module.
+`Receiving` and `Spendable` are private balances reconstructed locally from contract events. A successful escrow release does not immediately appear in Freighter: the Receiver must sync, merge, and then withdraw if public USDC is desired.
+
+## Repository structure
 
 ```text
 contracts/
-  token/                # upstream OpenZeppelin-based wrapper integration
+  token/                # OpenZeppelin-based confidential-token wrapper
   verifier/             # UltraHonk verification-key registry
   auditor/              # auditor-key registry
-  escrow/               # Trustless Work one-milestone escrow PoC
+  factory/              # shared factory for fresh escrow instances
+  escrow/               # Trustless Work one-milestone escrow
 packages/
-  sdk/                  # crypto, proving, chain, state, escrow adapters
+  sdk/                  # crypto, proving, event decoding, state, escrow adapters
   disclosure/           # selective-disclosure circuits and pinned VKs
-  app/                  # imported Next.js wallet, verifier, and auditor demo
+  app/                  # Next.js wallet, escrow, verifier, and auditor UI
   indexer/              # durable confidential-event ingestion and read API
 scripts/                # deployment and end-to-end test flows
-docs/                   # architecture, decisions, risks, and PoC plan
+docs/                   # architecture, decisions, runbooks, risks, and plans
 ```
 
-See [Contract Specification](docs/contract-spec.md), [Architecture](docs/architecture.md), [PoC Plan](docs/poc-plan.md), [USDC Strategy](docs/usdc-strategy.md), and [Threat Model](docs/threat-model.md).
+Start with:
 
-## Intended flow
+- [Current implementation and testnet runbook](docs/current-implementation-runbook.md)
+- [UI/UX next iteration](docs/ui-ux-next-iteration.md)
+- [Architecture](docs/architecture.md)
+- [Contract specification](docs/contract-spec.md)
+- [Threat model](docs/threat-model.md)
+- [USDC strategy](docs/usdc-strategy.md)
 
-1. Payer and receiver register confidential accounts.
-2. Payer deposits testnet USDC into the Confidential Token wrapper.
-3. Payer merges the receiving balance into spendable state.
-4. Payer calls the escrow's `fund` entry point, which atomically delegates the complete private escrow amount as one confidential allowance.
-5. Approver submits one approval-and-release transaction with an allowance-exhaustion proof.
-6. Escrow atomically calls the confidential delegated transfer to the configured receiver.
-7. Receiver reconstructs the incoming opening and can selectively disclose the payment.
-8. Auditor can decrypt the amount using the registered auditor key.
+## Run locally
 
-## USDC asset
+Prerequisites: Node.js, pnpm, Rust, Stellar CLI, Freighter, and a configured testnet deployment.
 
-The deployment path now targets Stellar testnet USDC: issuer `GBBD47…LFLA5`, SEP-41 SAC `CBIELT…QDAMA`, and 7-decimal base units. The deployment script derives the SAC from the asset and aborts on an identifier mismatch. Native XLM is used only for test-account funding and network fees. See [USDC Strategy](docs/usdc-strategy.md) for the complete manifest and source.
+```bash
+pnpm install
+pnpm --filter @ctd/sdk build
+pnpm --filter @ctd/app dev
+```
 
-## Go/no-go gate
+Rebuild the SDK whenever SDK exports or event decoders change. If Next.js still loads an older bundle, remove `packages/app/.next` and restart the app.
 
-Before building a complete UI, the contract spike must prove all of the following:
-
-- A Soroban escrow contract can act as the authorized confidential spender.
-- The payer cannot overspend or reuse an allowance.
-- The PoC's modified spender-transfer proof enforces that the post-transfer allowance balance is zero.
-- The configured receiver and current allowance state are bound to the authorized invocation and proof.
-- Replay, receiver substitution, amount substitution, and release-before-approval fail.
-- Receiver state can be recovered from indexed history.
-- Auditor decryption and receiver selective disclosure both work.
-
-The intended circuit change is deliberately narrow: add a zero-remaining-allowance constraint to the upstream `SpenderTransfer` circuit in this dedicated PoC deployment. The allowance itself is the committed one-milestone amount, so v0 needs no separate amount commitment.
-
-## Status
-
-The pinned reference monorepo is imported. The implementation includes the three-entry-point escrow contract, a shared factory for wallet-created escrow instances, delegated-spending SDK witnesses and XDR submitters, the pinned `SetSpender` funding circuit, a PoC-specific full-release Noir circuit, compiled browser proving artifacts and packed verifier keys, USDC-first deployment configuration, contract/circuit adversarial tests, and a guided seven-step escrow walkthrough at `/escrow`.
-
-The protocol deployment is performed once. After that, an Approver creates each new escrow through Freighter: the app invokes the factory, receives the fresh contract address, generates the address-bound registration proof, and initializes the fixed roles. `/escrow/payer`, `/escrow/approver`, and `/escrow/receiver` automatically use the latest escrow selected in the browser.
-
-## Deploy the protocol and run wallet-created escrows
-
-The deployer needs a funded Stellar CLI identity named `admin`. Then:
+For a brand-new protocol deployment:
 
 ```bash
 pnpm build:contracts
@@ -85,7 +89,32 @@ pnpm --filter @ctd/sdk build
 pnpm --filter @ctd/app dev
 ```
 
-The one-time deployment provisions the verifier, auditor registry, confidential USDC wrapper, and shared factory on Stellar testnet. It also writes the gitignored app configuration. Open `/escrow`, prepare the three role wallets, and follow the guided sequence. Creating the first or any subsequent escrow requires only Freighter; the CLI deployment is not repeated.
+The full deployment script is for new environments. Do not rerun it merely to create another escrow: doing so replaces shared contract IDs and separates the new app configuration from existing registrations and private state. New escrows are created through the shared factory in the Approver UI.
+
+## Events and indexing
+
+The confidential-token contract emits events including `register`, `deposit`, `merge`, `withdraw`, `transfer`, and `spender_transfer`. Escrow instances emit `init`, `funded`, and `released`.
+
+The SDK/RPC recovery path decodes `spender_transfer`, credits the Receiver's private `Receiving` balance, and performs a versioned one-time backfill for browser caches that had already advanced past a release. The checked-in Goldsky pipeline does not yet ingest `spender_transfer`; durable indexer support remains a priority.
+
+The factory also lacks an `escrow_deployed` event. Until that is added, escrow discovery is browser-local rather than globally indexable.
+
+## Current limitations
+
+- One escrow represents one milestone and releases its full allowance.
+- Escrow selection/history is stored in the browser; there is no cross-device discovery or import flow yet.
+- Private state depends on event availability and locally held confidential keys.
+- The Goldsky pipeline must be extended for `spender_transfer`.
+- The factory needs an `escrow_deployed` event for complete instance discovery.
+- Developer-preview cryptography, circuits, and verifier contracts require further security review before production use.
+
+## Validation
+
+The working iteration was validated with SDK and app TypeScript checks, a production Next.js build, the fast cryptography/escrow suite, and dedicated release-recovery regression coverage. The release recovery verifies exact commitment reconstruction and prevents double-crediting during historical backfill.
+
+## Next iteration
+
+The next iteration focuses on UI and user experience: stronger active-wallet and active-escrow context, clearer private balance explanations, transaction/proof progress, state-aware journey guidance, human-readable escrow labels, import/discovery, and actionable diagnostics. See the [UI/UX plan](docs/ui-ux-next-iteration.md).
 
 ## References
 
