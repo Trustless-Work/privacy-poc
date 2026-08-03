@@ -1,10 +1,11 @@
-/** Browser orchestration for the single pre-deployed escrow contract. */
+/** Browser orchestration for one selected escrow contract. */
 
 import {
   addressToField,
   buildFullReleaseWitness,
   buildRegisterWitness,
   deriveKeys,
+  deployEscrow,
   fromHex,
   openStoredDelegation,
   proverFromArtifact,
@@ -20,7 +21,7 @@ import registerCircuit from "@ctd/sdk/circuits/register.json";
 import fullReleaseCircuit from "@ctd/sdk/circuits/spender_transfer_full_release.json";
 
 import type { Deployment } from "./deployment";
-import { connectFreighter } from "./freighter";
+import { connectFreighter, type MessageSigner } from "./freighter";
 import { keyDerivationMessage, skFromSignature } from "./derive-key";
 import { ensureBrowserBackend } from "./bb-loader";
 import { clientsFor } from "./rpc";
@@ -28,6 +29,7 @@ import { truncatePrefix } from "./format";
 
 type Log = (message: string) => void;
 export type EscrowTxPhase = "proving" | "submitting";
+export type EscrowCreatePhase = "deploying" | EscrowTxPhase;
 
 export class SingletonEscrow {
   readonly address: string;
@@ -42,7 +44,7 @@ export class SingletonEscrow {
     private readonly log: Log,
   ) {
     const address = deployment.contracts.escrow;
-    if (!address) throw new Error("singleton escrow contract is not configured");
+    if (!address) throw new Error("escrow contract is not selected");
     this.address = address;
     this.approverAddress = signer.publicKey;
     this.registerProver = proverFromArtifact(registerCircuit as never);
@@ -52,22 +54,60 @@ export class SingletonEscrow {
   static async connect(deployment: Deployment, log: Log): Promise<SingletonEscrow> {
     ensureBrowserBackend();
     const escrow = deployment.contracts.escrow;
-    if (!escrow) throw new Error("singleton escrow contract is not configured");
+    if (!escrow) throw new Error("escrow contract is not selected");
     const signer = await connectFreighter();
+    log(`connected approver ${truncatePrefix(signer.publicKey, 8)}`);
+    return SingletonEscrow.fromSigner(deployment, signer, log);
+  }
+
+  /** Deploy and initialize a fresh escrow using only Freighter. */
+  static async create(
+    deployment: Deployment,
+    payer: string,
+    receiver: string,
+    log: Log,
+    onPhase?: (phase: EscrowCreatePhase) => void,
+    onDeployed?: (contractId: string) => void,
+  ): Promise<SingletonEscrow> {
+    ensureBrowserBackend();
+    const factory = deployment.contracts.factory;
+    if (!factory) throw new Error("escrow factory is not configured");
+    const signer = await connectFreighter();
+    if (payer === receiver || payer === signer.publicKey || receiver === signer.publicKey) {
+      throw new Error("Payer, Receiver, and Approver must be three different Stellar accounts.");
+    }
+    const { client } = clientsFor(deployment);
+    onPhase?.("deploying");
+    log("deploying a fresh escrow from the shared factory…");
+    const escrow = await deployEscrow(client, signer, factory);
+    log(`fresh escrow deployed at ${truncatePrefix(escrow, 8)}`);
+    onDeployed?.(escrow);
+
+    const configured: Deployment = {
+      ...deployment,
+      contracts: { ...deployment.contracts, escrow },
+    };
+    const controller = await SingletonEscrow.fromSigner(configured, signer, log);
+    await controller.initialize(payer, receiver, onPhase);
+    return controller;
+  }
+
+  private static async fromSigner(deployment: Deployment, signer: MessageSigner, log: Log): Promise<SingletonEscrow> {
+    const escrow = deployment.contracts.escrow;
+    if (!escrow) throw new Error("escrow contract is not configured");
     const cacheKey = `ctd:escrow-sk:${deployment.contracts.token}:${escrow}:${signer.publicKey}`;
     let sk: bigint;
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
       sk = fromHex(cached);
     } else {
-      log("sign the singleton escrow key-derivation message in Freighter…");
+      log("sign the escrow key-derivation message in Freighter…");
       const signature = await signer.signMessage(
         `${keyDerivationMessage(deployment.networkPassphrase, deployment.contracts.token)}\nEscrow contract: ${escrow}`,
       );
       sk = await skFromSignature(signature);
       localStorage.setItem(cacheKey, toHex32(sk));
     }
-    log(`connected approver ${truncatePrefix(signer.publicKey, 8)}`);
     return new SingletonEscrow(
       deployment,
       signer,
@@ -88,10 +128,10 @@ export class SingletonEscrow {
     const { client } = clientsFor(this.deployment);
     const witness = buildRegisterWitness(this.spenderKeys);
     onPhase?.("proving");
-    this.log("proving registration for the pre-deployed escrow address…");
+    this.log("proving registration for the new escrow address…");
     const { proof } = await this.registerProver.prove(witness.inputs);
     onPhase?.("submitting");
-    this.log("initializing the singleton escrow with fixed roles…");
+    this.log("initializing the escrow with fixed roles…");
     const result = await submitInitializeEscrow(
       client,
       this.signer,
@@ -103,7 +143,7 @@ export class SingletonEscrow {
       witness,
       proof,
     );
-    this.log(`singleton initialized (tx ${truncatePrefix(result.hash)})`);
+    this.log(`escrow initialized (tx ${truncatePrefix(result.hash)})`);
   }
 
   async approveAndRelease(onPhase?: (phase: EscrowTxPhase) => void): Promise<void> {

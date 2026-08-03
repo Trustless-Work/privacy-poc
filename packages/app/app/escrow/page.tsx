@@ -78,18 +78,19 @@ const STEPS: Step[] = [
     id: 4,
     phase: "Initialize",
     actor: "Approver",
-    title: "Initialize the escrow",
+    title: "Create the escrow",
     summary:
-      "The connected Approver sets the fixed Payer and Receiver addresses. All three roles must be different.",
-    action: "Initialize escrow",
+      "The connected Approver deploys a fresh escrow from the shared factory and sets the fixed Payer and Receiver addresses.",
+    action: "Create escrow",
     public: ["Payer, Receiver, and Approver addresses", "Initialized status"],
     private: ["Escrow confidential key"],
     mechanics: [
       "Switch Freighter to Escrow Approver and refresh the Approver page.",
       "Paste the Payer and Receiver G… addresses into the labeled fields.",
-      "Click Initialize and approve the Freighter request.",
+      "Click Create escrow with Freighter and approve the deployment request.",
+      "Sign the key message, then approve initialization.",
     ],
-    expected: "Shared escrow state says Initialized and displays all three roles.",
+    expected: "A new contract is selected and its state says Initialized with all three roles.",
     href: "/escrow/approver",
   },
   {
@@ -184,11 +185,10 @@ export default function EscrowWalkthroughPage() {
           <div className="flex gap-3">
             <span aria-hidden className="mt-0.5 text-amber-300">●</span>
             <div>
-              <p className="text-sm font-medium text-amber-300">Guided UI preview</p>
+              <p className="text-sm font-medium text-amber-300">Create your first escrow</p>
               <p className="mt-1 text-xs leading-relaxed text-neutral-400">
-                The escrow contract is not configured in this deployment yet. You can explore the
-                complete journey below; live wallet actions unlock after the integrated USDC
-                testnet deployment is added.
+                No escrow has been selected yet. Complete steps 1–3, then use the Approver page in
+                step 4 to create one with Freighter.
               </p>
             </div>
           </div>
@@ -266,13 +266,13 @@ export default function EscrowWalkthroughPage() {
             <strong className="font-semibold">Success looks like:</strong> {step.expected}
           </div>
 
-          {escrow ? (
+          {escrow || step.id <= 4 ? (
             <Link href={step.href} className="mt-6 block w-full rounded-lg bg-indigo-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-indigo-500">
               {step.action}
             </Link>
           ) : (
             <button type="button" disabled className="mt-6 w-full cursor-not-allowed rounded-lg bg-neutral-800 px-4 py-3 text-sm font-semibold text-neutral-500">
-              {step.action} — deployment required
+              {step.action} — create an escrow first
             </button>
           )}
         </section>

@@ -16,11 +16,12 @@
  * advanced deployment is acceptable for the demo and avoids an SSR mismatch.
  */
 
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { DEFAULT_DEPLOYMENT, type Deployment } from "./deployment";
 
 const ADVANCED_KEY = "ctd:advanced:deployment";
 const ACTIVE_KEY = "ctd:active"; // "default" | "advanced"
+const ESCROWS_KEY = "ctd:escrows"; // confidential-token id -> active escrow id
 
 type Which = "default" | "advanced";
 
@@ -36,6 +37,8 @@ interface ActiveDeploymentCtx {
   saveAdvanced: (d: Deployment) => void;
   /** Forget the advanced deployment and fall back to the default. */
   clearAdvanced: () => void;
+  /** Select the newly-created escrow for every role page in this deployment. */
+  setActiveEscrow: (contractId: string) => void;
 }
 
 const Ctx = createContext<ActiveDeploymentCtx | null>(null);
@@ -54,11 +57,17 @@ function loadAdvanced(): Deployment | null {
 export function ActiveDeploymentProvider({ children }: { children: React.ReactNode }) {
   const [advanced, setAdvanced] = useState<Deployment | null>(null);
   const [which, setWhichState] = useState<Which>("default");
+  const [escrows, setEscrows] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const adv = loadAdvanced();
     if (adv) setAdvanced(adv);
     if (localStorage.getItem(ACTIVE_KEY) === "advanced" && adv) setWhichState("advanced");
+    try {
+      setEscrows(JSON.parse(localStorage.getItem(ESCROWS_KEY) || "{}") as Record<string, string>);
+    } catch {
+      setEscrows({});
+    }
   }, []);
 
   const setWhich = useCallback((w: Which) => {
@@ -92,10 +101,22 @@ export function ActiveDeploymentProvider({ children }: { children: React.ReactNo
     setWhichState("default");
   }, []);
 
-  const active = which === "advanced" && advanced ? advanced : DEFAULT_DEPLOYMENT;
+  const baseActive = which === "advanced" && advanced ? advanced : DEFAULT_DEPLOYMENT;
+  const selectedEscrow = escrows[baseActive.contracts.token];
+  const active = useMemo<Deployment>(() => selectedEscrow
+    ? { ...baseActive, contracts: { ...baseActive.contracts, escrow: selectedEscrow } }
+    : baseActive, [baseActive, selectedEscrow]);
+
+  const setActiveEscrow = useCallback((contractId: string) => {
+    setEscrows((current) => {
+      const next = { ...current, [baseActive.contracts.token]: contractId };
+      try { localStorage.setItem(ESCROWS_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  }, [baseActive.contracts.token]);
 
   return (
-    <Ctx.Provider value={{ active, advanced, which, setWhich, saveAdvanced, clearAdvanced }}>
+    <Ctx.Provider value={{ active, advanced, which, setWhich, saveAdvanced, clearAdvanced, setActiveEscrow }}>
       {children}
     </Ctx.Provider>
   );

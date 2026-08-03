@@ -2,7 +2,7 @@
 
 Planned testnet automation:
 
-- deploy verifier, auditor registry, underlying test asset, Confidential Token, and escrow;
+- deploy verifier, auditor registry, underlying test asset, Confidential Token, and the shared protocol factory;
 - write a network-scoped deployment manifest;
 - run the reference confidential-token end-to-end flow;
 - run delegated-spender and one-milestone escrow flows;

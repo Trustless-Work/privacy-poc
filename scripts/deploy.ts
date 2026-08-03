@@ -2,7 +2,7 @@
  * Deploy the confidential-token demo to Stellar testnet:
  *
  *   1. Resolve the official Stellar testnet USDC Stellar Asset Contract.
- *   2. Deploy verifier + auditor + token + one uninitialized escrow.
+ *   2. Deploy verifier + auditor + token + the shared protocol factory.
  *   3. Register all six circuit verification keys in the verifier.
  *   4. Register one auditor Grumpkin key (id 0).
  *   5. Assert the contract's stored address-as-field equals the SDK's
@@ -122,11 +122,6 @@ async function main(): Promise<void> {
   console.log(`token = ${token}`);
   client.cfg.contracts.token = token;
 
-  // The escrow has no constructor. Its approver initializes the fixed payer,
-  // receiver, approver, and token addresses through initialize(...).
-  const escrow = deploy(WASM.escrow, []);
-  console.log(`escrow = ${escrow}`);
-
   const signer = keypairSigner(secret(DEPLOYER), PASSPHRASE);
 
   // 3. Register the six verification keys.
@@ -175,19 +170,21 @@ async function main(): Promise<void> {
     console.log(`  addr_f parity OK: ${toHex32(sdkAddrF)}`);
   }
 
-  // 6. Provision the shared token factory for advanced mode. Install the four
-  //    deployable child WASMs and deploy one factory configured with their
+  // 6. Provision the shared protocol factory. Install the five deployable
+  //    child WASMs and deploy one factory configured with their
   //    hashes; the browser only invokes factory.deploy_* (it never installs
   //    WASM). The vanilla-token hash is the same WASM as `token` above.
   const vanillaWasm = upload(WASM.token);
   const compliantWasm = upload(WASM.tokenWithCompliance);
   const allowlistWasm = upload(WASM.allowlist);
   const blocklistWasm = upload(WASM.blocklist);
+  const escrowWasm = upload(WASM.escrow);
   const factory = deploy(WASM.factory, [
     "--vanilla_token_wasm", vanillaWasm,
     "--compliant_token_wasm", compliantWasm,
     "--allowlist_wasm", allowlistWasm,
     "--blocklist_wasm", blocklistWasm,
+    "--escrow_wasm", escrowWasm,
   ]);
   console.log(`factory = ${factory}`);
 
@@ -196,7 +193,7 @@ async function main(): Promise<void> {
     rpcUrl: RPC_URL,
     passphrase: PASSPHRASE,
     deployedAtLedger: ledgerBeforeToken,
-    contracts: { token, verifier, auditor, underlying, escrow, allowlist, blocklist, factory },
+    contracts: { token, verifier, auditor, underlying, allowlist, blocklist, factory },
     asset: {
       code: "USDC",
       issuer: TESTNET_USDC_ISSUER,
@@ -214,15 +211,13 @@ async function main(): Promise<void> {
   saveDeployment(deployment);
   console.log(`\nwrote deployments/${NETWORK}.json`);
 
-  // The app intentionally serves one canonical pre-deployed escrow. Generate
-  // its local public configuration so `pnpm --filter @ctd/app dev` immediately
-  // uses this USDC deployment. This file is gitignored.
+  // Generate the local public configuration. Escrows are created later from
+  // the app through the shared factory, so there is no fixed escrow id here.
   const appEnv = [
     `NEXT_PUBLIC_TOKEN_CONTRACT_ID=${token}`,
     `NEXT_PUBLIC_VERIFIER_CONTRACT_ID=${verifier}`,
     `NEXT_PUBLIC_AUDITOR_CONTRACT_ID=${auditor}`,
     `NEXT_PUBLIC_UNDERLYING_CONTRACT_ID=${underlying}`,
-    `NEXT_PUBLIC_ESCROW_CONTRACT_ID=${escrow}`,
     `NEXT_PUBLIC_FACTORY_CONTRACT_ID=${factory}`,
     `NEXT_PUBLIC_DEPLOYED_AT_LEDGER=${ledgerBeforeToken}`,
     "NEXT_PUBLIC_AUDITOR_ID=0",
@@ -230,7 +225,7 @@ async function main(): Promise<void> {
     "",
   ].join("\n");
   writeFileSync(join(REPO_ROOT, "packages/app/.env.local"), appEnv);
-  console.log("wrote packages/app/.env.local for the singleton escrow UI");
+  console.log("wrote packages/app/.env.local for wallet-created escrows");
 }
 
 /** Scan token events for `address_as_field_set` and return its field value. */

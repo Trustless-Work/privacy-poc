@@ -78,7 +78,7 @@ export interface OnChainDelegation {
 
 export type EscrowStatus = "Initialized" | "Funded" | "Released";
 
-/** Public state of the singleton one-milestone escrow contract. */
+/** Public state of one one-milestone escrow contract. */
 export interface OnChainEscrow {
   payer: string;
   receiver: string;
@@ -161,7 +161,7 @@ export class ChainClient {
     }
   }
 
-  /** Read the singleton escrow, or `null` before its one-time initialization. */
+  /** Read an escrow, or `null` before its one-time initialization. */
   async escrowState(escrowContract: string): Promise<OnChainEscrow | null> {
     try {
       return parseEscrow(await this.simulate(escrowContract, "get_escrow", []));

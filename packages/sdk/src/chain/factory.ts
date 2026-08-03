@@ -1,8 +1,8 @@
 /**
- * Token-factory deploy helpers (advanced mode).
+ * Protocol-factory deploy helpers.
  *
- * The shared `TokenFactoryContract` deploys confidential-token instances from
- * WASM already installed on-chain (configured at the factory's construction).
+ * The shared factory deploys confidential-token and escrow instances from WASM
+ * already installed on-chain (configured at the factory's construction).
  * The browser only INVOKES these methods via Freighter — it never installs
  * WASM. Each deploy derives a deterministic address from `(factory, salt)`, so
  * a fresh random salt per deploy avoids collisions.
@@ -59,6 +59,17 @@ export async function deployVanillaToken(
     signer,
   );
   return requireAddr(r.returnValue, "deploy_token");
+}
+
+/** `deploy_escrow(salt)` -> a fresh uninitialized escrow address. */
+export async function deployEscrow(
+  client: ChainClient,
+  signer: Signer,
+  factory: string,
+  salt: Uint8Array = randomSalt(),
+): Promise<string> {
+  const r = await client.invoke(factory, "deploy_escrow", [saltVal(salt)], signer);
+  return requireAddr(r.returnValue, "deploy_escrow");
 }
 
 /**

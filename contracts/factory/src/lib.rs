@@ -1,7 +1,7 @@
-//! Token factory contract.
+//! Protocol factory contract.
 //!
-//! Deploys the demo's confidential-token instances from WASM already installed
-//! on-chain, in three flavors:
+//! Deploys the demo's confidential-token and escrow instances from WASM already
+//! installed on-chain. Token instances are available in three flavors:
 //!
 //! 1. [`deploy_token`](TokenFactoryContract::deploy_token) — a **vanilla**
 //!    confidential token (`type Hooks = NoHooks`, no compliance).
@@ -12,6 +12,8 @@
 //! 3. [`deploy_policy_and_token`](TokenFactoryContract::deploy_policy_and_token)
 //!    — deploys a **fresh policy** (allowlist or blocklist) and then a compliant
 //!    token bound to it, in one call.
+//! 4. [`deploy_escrow`](TokenFactoryContract::deploy_escrow) — deploys a fresh
+//!    one-milestone confidential escrow for later wallet initialization.
 //!
 //! ## How it works
 //!
@@ -51,6 +53,8 @@ pub enum FactoryStorageKey {
     AllowListWasm,
     /// `BlockList` policy.
     BlockListWasm,
+    /// One-milestone confidential escrow.
+    EscrowWasm,
 }
 
 /// Which policy flavor to deploy in
@@ -76,12 +80,14 @@ impl TokenFactoryContract {
         compliant_token_wasm: BytesN<32>,
         allowlist_wasm: BytesN<32>,
         blocklist_wasm: BytesN<32>,
+        escrow_wasm: BytesN<32>,
     ) {
         let s = e.storage().instance();
         s.set(&FactoryStorageKey::VanillaTokenWasm, &vanilla_token_wasm);
         s.set(&FactoryStorageKey::CompliantTokenWasm, &compliant_token_wasm);
         s.set(&FactoryStorageKey::AllowListWasm, &allowlist_wasm);
         s.set(&FactoryStorageKey::BlockListWasm, &blocklist_wasm);
+        s.set(&FactoryStorageKey::EscrowWasm, &escrow_wasm);
     }
 
     /// (1) Deploy a vanilla confidential token bound to the given collaborators.
@@ -151,6 +157,17 @@ impl TokenFactoryContract {
         );
 
         (policy, token)
+    }
+
+    /// Deploys one fresh, uninitialized confidential escrow instance. The
+    /// browser initializes it in a second Freighter-signed transaction after
+    /// generating the registration proof bound to the returned contract
+    /// address.
+    pub fn deploy_escrow(e: &Env, salt: BytesN<32>) -> Address {
+        let wasm = read_wasm(e, FactoryStorageKey::EscrowWasm);
+        e.deployer()
+            .with_current_contract(salt)
+            .deploy_v2(wasm, ())
     }
 }
 

@@ -70,8 +70,8 @@ export interface Deployment {
 const INDEXER_URL = process.env.NEXT_PUBLIC_INDEXER_URL || undefined;
 const DEFAULT_XLM_SAC = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
 const POC_TOKEN = process.env.NEXT_PUBLIC_TOKEN_CONTRACT_ID;
-const POC_ESCROW = process.env.NEXT_PUBLIC_ESCROW_CONTRACT_ID;
-const POC_ENABLED = Boolean(POC_TOKEN && POC_ESCROW);
+const POC_ESCROW = process.env.NEXT_PUBLIC_ESCROW_CONTRACT_ID; // legacy/fallback instance
+const POC_ENABLED = Boolean(POC_TOKEN);
 
 export const DEFAULT_DEPLOYMENT: Deployment = {
   id: "default",

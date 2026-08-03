@@ -69,11 +69,11 @@ The intended circuit change is deliberately narrow: add a zero-remaining-allowan
 
 ## Status
 
-The pinned reference monorepo is imported. The implementation includes the three-entry-point escrow contract, delegated-spending SDK witnesses and XDR submitters, the pinned `SetSpender` funding circuit, a PoC-specific full-release Noir circuit, compiled browser proving artifacts and packed verifier keys, USDC-first deployment configuration, contract/circuit adversarial tests, and a guided six-step escrow walkthrough at `/escrow`.
+The pinned reference monorepo is imported. The implementation includes the three-entry-point escrow contract, a shared factory for wallet-created escrow instances, delegated-spending SDK witnesses and XDR submitters, the pinned `SetSpender` funding circuit, a PoC-specific full-release Noir circuit, compiled browser proving artifacts and packed verifier keys, USDC-first deployment configuration, contract/circuit adversarial tests, and a guided seven-step escrow walkthrough at `/escrow`.
 
-V1 uses one pre-deployed escrow contract for one complete lifecycle. The approver initializes its fixed roles once; `/escrow/payer`, `/escrow/approver`, and `/escrow/receiver` then execute the real testnet SDK operations against that same contract address. The deployment script writes the resulting public contract manifest to `packages/app/.env.local`, which activates these pages automatically.
+The protocol deployment is performed once. After that, an Approver creates each new escrow through Freighter: the app invokes the factory, receives the fresh contract address, generates the address-bound registration proof, and initializes the fixed roles. `/escrow/payer`, `/escrow/approver`, and `/escrow/receiver` automatically use the latest escrow selected in the browser.
 
-## Deploy and run the singleton v1
+## Deploy the protocol and run wallet-created escrows
 
 The deployer needs a funded Stellar CLI identity named `admin`. Then:
 
@@ -85,7 +85,7 @@ pnpm --filter @ctd/sdk build
 pnpm --filter @ctd/app dev
 ```
 
-The deployment provisions the verifier, auditor registry, confidential USDC wrapper, and exactly one uninitialized escrow contract on Stellar testnet. It also writes the gitignored app configuration. Open `/escrow`, connect the three role wallets, and follow the guided sequence.
+The one-time deployment provisions the verifier, auditor registry, confidential USDC wrapper, and shared factory on Stellar testnet. It also writes the gitignored app configuration. Open `/escrow`, prepare the three role wallets, and follow the guided sequence. Creating the first or any subsequent escrow requires only Freighter; the CLI deployment is not repeated.
 
 ## References
 
