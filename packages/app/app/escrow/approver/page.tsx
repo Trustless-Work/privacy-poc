@@ -14,7 +14,7 @@ import { EscrowStateCard } from "../escrow-state";
 import { AccountSwitchReminder, BeginnerGuide } from "../guide";
 
 export default function ApproverPage() {
-  const { active, setActiveEscrow } = useActiveDeployment();
+  const { active, escrows, setActiveEscrow } = useActiveDeployment();
   const escrowAddress = active.contracts.escrow;
   const [controller, setController] = useState<SingletonEscrow | null>(null);
   const [state, setState] = useState<OnChainEscrow | null>(null);
@@ -49,6 +49,11 @@ export default function ApproverPage() {
   }, [active, escrowAddress]);
   useEffect(() => { void refresh(); }, [refresh]);
   useEffect(() => () => { void controller?.destroy(); }, [controller]);
+  useEffect(() => {
+    setError(null);
+    setShowCreate(!escrowAddress);
+    if (controller && controller.address !== escrowAddress) setController(null);
+  }, [controller, escrowAddress]);
 
   const connect = async () => {
     setBusy("connect"); setError(null);
@@ -76,6 +81,13 @@ export default function ApproverPage() {
     } finally {
       setBusy(null); setPhase(null);
     }
+  };
+
+  const startCreate = () => {
+    setPayer(state?.payer || "");
+    setReceiver(state?.receiver || "");
+    setError(null);
+    setShowCreate(true);
   };
 
   const run = (label: string, action: (c: SingletonEscrow) => Promise<void>) => async () => {
@@ -158,7 +170,7 @@ export default function ApproverPage() {
         {(showCreate || !state) && (
           <section className="rounded-lg border border-violet-500/25 bg-violet-500/5 p-5">
             <h2 className="font-semibold">Create a fresh escrow</h2>
-            <p className="mt-2 text-xs text-neutral-400">The Freighter account you select becomes the Approver. The app deploys and initializes a new contract; no CLI action is needed.</p>
+            <p className="mt-2 text-xs text-neutral-400">The Freighter account you select becomes the Approver. You may reuse the same three role addresses; every click deploys a separate contract with fresh state.</p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <AddressInput label="Payer address" value={payer} onChange={setPayer} />
               <AddressInput label="Receiver address" value={receiver} onChange={setReceiver} />
@@ -172,16 +184,20 @@ export default function ApproverPage() {
           </section>
         )}
         {state && !showCreate && (
-          <button type="button" onClick={() => setShowCreate(true)} disabled={busy !== null} className="rounded border border-neutral-700 px-4 py-2 text-sm font-medium text-neutral-300 hover:border-violet-500 hover:text-white disabled:opacity-50">
-            Create another escrow
-          </button>
+          <section className="rounded-lg border border-neutral-800 bg-neutral-900/30 p-5">
+            <h2 className="font-semibold">Escrow instances</h2>
+            <p className="mt-2 text-xs text-neutral-400">You have {escrows.length || 1} escrow{(escrows.length || 1) === 1 ? "" : "s"} in this deployment. Use the Escrow selector in the top bar to switch instances.</p>
+            <button type="button" onClick={startCreate} disabled={busy !== null} className="mt-4 rounded border border-neutral-700 px-4 py-2 text-sm font-medium text-neutral-300 hover:border-violet-500 hover:text-white disabled:opacity-50">
+              Create new escrow instance
+            </button>
+          </section>
         )}
-        {state && !controller && (
+        {state && !showCreate && !controller && (
           <button onClick={connect} disabled={busy !== null} className="rounded bg-violet-600 px-4 py-2 font-medium hover:bg-violet-500 disabled:opacity-50">
             {busy === "connect" ? "Connecting…" : "Connect approver wallet"}
           </button>
         )}
-        {state && controller && (
+        {state && !showCreate && controller && (
           <section className="rounded-lg border border-violet-500/25 bg-violet-500/5 p-5">
             <h2 className="font-semibold">Approve and release</h2>
             <p className="mt-2 text-sm text-neutral-300">One approval releases the entire confidential allowance. No amount or receiver can be edited here.</p>

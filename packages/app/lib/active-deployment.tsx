@@ -21,7 +21,9 @@ import { DEFAULT_DEPLOYMENT, type Deployment } from "./deployment";
 
 const ADVANCED_KEY = "ctd:advanced:deployment";
 const ACTIVE_KEY = "ctd:active"; // "default" | "advanced"
-const ESCROWS_KEY = "ctd:escrows"; // confidential-token id -> active escrow id
+const LEGACY_ESCROWS_KEY = "ctd:escrows"; // confidential-token id -> active escrow id
+const ESCROWS_KEY = "ctd:escrows:v2"; // confidential-token id -> known escrow ids
+const SELECTED_ESCROWS_KEY = "ctd:selected-escrows"; // confidential-token id -> selected escrow id
 
 type Which = "default" | "advanced";
 
@@ -39,6 +41,8 @@ interface ActiveDeploymentCtx {
   clearAdvanced: () => void;
   /** Select the newly-created escrow for every role page in this deployment. */
   setActiveEscrow: (contractId: string) => void;
+  /** Every escrow created or selected in the active token deployment. */
+  escrows: string[];
 }
 
 const Ctx = createContext<ActiveDeploymentCtx | null>(null);
@@ -57,16 +61,28 @@ function loadAdvanced(): Deployment | null {
 export function ActiveDeploymentProvider({ children }: { children: React.ReactNode }) {
   const [advanced, setAdvanced] = useState<Deployment | null>(null);
   const [which, setWhichState] = useState<Which>("default");
-  const [escrows, setEscrows] = useState<Record<string, string>>({});
+  const [escrowsByToken, setEscrowsByToken] = useState<Record<string, string[]>>({});
+  const [selectedByToken, setSelectedByToken] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const adv = loadAdvanced();
     if (adv) setAdvanced(adv);
     if (localStorage.getItem(ACTIVE_KEY) === "advanced" && adv) setWhichState("advanced");
     try {
-      setEscrows(JSON.parse(localStorage.getItem(ESCROWS_KEY) || "{}") as Record<string, string>);
+      const saved = JSON.parse(localStorage.getItem(ESCROWS_KEY) || "{}") as Record<string, string[]>;
+      const selected = JSON.parse(localStorage.getItem(SELECTED_ESCROWS_KEY) || "{}") as Record<string, string>;
+      const legacy = JSON.parse(localStorage.getItem(LEGACY_ESCROWS_KEY) || "{}") as Record<string, string>;
+      for (const [token, escrow] of Object.entries(legacy)) {
+        if (!saved[token]?.includes(escrow)) saved[token] = [...(saved[token] || []), escrow];
+        if (!selected[token]) selected[token] = escrow;
+      }
+      setEscrowsByToken(saved);
+      setSelectedByToken(selected);
+      localStorage.setItem(ESCROWS_KEY, JSON.stringify(saved));
+      localStorage.setItem(SELECTED_ESCROWS_KEY, JSON.stringify(selected));
     } catch {
-      setEscrows({});
+      setEscrowsByToken({});
+      setSelectedByToken({});
     }
   }, []);
 
@@ -102,21 +118,36 @@ export function ActiveDeploymentProvider({ children }: { children: React.ReactNo
   }, []);
 
   const baseActive = which === "advanced" && advanced ? advanced : DEFAULT_DEPLOYMENT;
-  const selectedEscrow = escrows[baseActive.contracts.token];
+  const savedEscrows = escrowsByToken[baseActive.contracts.token] || [];
+  const tokenEscrows = baseActive.contracts.escrow && !savedEscrows.includes(baseActive.contracts.escrow)
+    ? [baseActive.contracts.escrow, ...savedEscrows]
+    : savedEscrows;
+  const selectedEscrow = selectedByToken[baseActive.contracts.token]
+    || tokenEscrows.at(-1)
+    || baseActive.contracts.escrow;
   const active = useMemo<Deployment>(() => selectedEscrow
     ? { ...baseActive, contracts: { ...baseActive.contracts, escrow: selectedEscrow } }
     : baseActive, [baseActive, selectedEscrow]);
 
   const setActiveEscrow = useCallback((contractId: string) => {
-    setEscrows((current) => {
-      const next = { ...current, [baseActive.contracts.token]: contractId };
+    const token = baseActive.contracts.token;
+    setEscrowsByToken((current) => {
+      const existing = current[token] || [];
+      const next = existing.includes(contractId)
+        ? current
+        : { ...current, [token]: [...existing, contractId] };
       try { localStorage.setItem(ESCROWS_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+    setSelectedByToken((current) => {
+      const next = { ...current, [token]: contractId };
+      try { localStorage.setItem(SELECTED_ESCROWS_KEY, JSON.stringify(next)); } catch { /* ignore */ }
       return next;
     });
   }, [baseActive.contracts.token]);
 
   return (
-    <Ctx.Provider value={{ active, advanced, which, setWhich, saveAdvanced, clearAdvanced, setActiveEscrow }}>
+    <Ctx.Provider value={{ active, advanced, which, setWhich, saveAdvanced, clearAdvanced, setActiveEscrow, escrows: tokenEscrows }}>
       {children}
     </Ctx.Provider>
   );

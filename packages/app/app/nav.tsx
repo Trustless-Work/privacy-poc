@@ -16,6 +16,7 @@ import { useEffect, useRef, useState } from "react";
 import { ThemeToggle } from "./theme-toggle";
 import { useActiveDeployment } from "@/lib/active-deployment";
 import { hasAdminDashboard } from "@/lib/deployment";
+import { truncateMiddle } from "@/lib/format";
 
 export const PERSONAS = [
   { href: "/escrow", label: "Escrow walkthrough", text: "text-emerald-300" },
@@ -225,6 +226,34 @@ function RoleDropdown() {
   );
 }
 
+function EscrowDropdown() {
+  const pathname = usePathname();
+  const { active, escrows, setActiveEscrow } = useActiveDeployment();
+  if (!pathname.startsWith("/escrow") || escrows.length === 0) return null;
+
+  const selected = active.contracts.escrow;
+  return (
+    <Dropdown
+      label="Escrow"
+      triggerText={selected ? truncateMiddle(selected, 4, 4) : "Choose escrow"}
+      triggerCls="font-mono text-emerald-300"
+    >
+      {[...escrows].reverse().map((escrow, index) => (
+        <button
+          key={escrow}
+          type="button"
+          role="menuitem"
+          onClick={() => setActiveEscrow(escrow)}
+          className={itemCls(selected === escrow, "bg-neutral-800 text-emerald-300")}
+        >
+          <span className="mr-2 text-neutral-500">#{escrows.length - index}</span>
+          <span className="font-mono">{truncateMiddle(escrow, 6, 6)}</span>
+        </button>
+      ))}
+    </Dropdown>
+  );
+}
+
 export function PersonaNav() {
   return (
     <nav className="sticky top-0 z-20 border-b border-neutral-800 bg-neutral-950/80 backdrop-blur">
@@ -236,6 +265,7 @@ export function PersonaNav() {
         <span className="flex-1" />
         <DeploymentToggle />
         <span className="mx-0.5 hidden h-4 w-px bg-neutral-800 sm:inline-block" />
+        <EscrowDropdown />
         <RoleDropdown />
         <ThemeToggle />
       </div>
