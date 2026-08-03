@@ -11,6 +11,7 @@ import { PageShell } from "../page-shell";
 import { ErrorBox } from "../error-box";
 import { LogPanel } from "../log-panel";
 import { Addr } from "../addr";
+import { AccountSwitchReminder } from "../escrow/guide";
 
 type ActionTab = "deposit" | "withdraw" | "transfer" | "merge";
 
@@ -67,7 +68,7 @@ export default function Page() {
   const [mergeNotice, setMergeNotice] = useState<"incoming" | "deposit" | null>(null);
   const [eventsKey, setEventsKey] = useState(0);
 
-  const [depositAmt, setDepositAmt] = useState("100");
+  const [depositAmt, setDepositAmt] = useState("10");
   const [transferTo, setTransferTo] = useState("");
   const [transferAmt, setTransferAmt] = useState("40");
   const [withdrawAmt, setWithdrawAmt] = useState("40");
@@ -148,9 +149,42 @@ export default function Page() {
 
   return (
     <PageShell
-      title="Account holder"
-      subtitle="Hold tokens and move them without revealing amounts on-chain: deposit, merge, transfer, and withdraw, each as a client-side zero-knowledge proof. To prove what a single transfer paid, disclose it from the activity list below."
+      title="Prepare a Payer or Receiver wallet"
+      subtitle="Use this page before the escrow flow. Connect and prepare one Freighter Testnet account at a time."
     >
+      <section className="mb-6 rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-5">
+        <p className="text-xs font-semibold uppercase tracking-wider text-indigo-300">Steps 2–3 of 7</p>
+        <h2 className="mt-1 text-lg font-semibold">Choose the account you are preparing</h2>
+        <p className="mt-2 text-sm leading-relaxed text-neutral-400">
+          Receiver preparation stops after registration. Payer preparation continues through Deposit and Merge.
+        </p>
+        <div className="mt-5 grid gap-4 md:grid-cols-2">
+          <WalletRoleCard
+            role="Receiver"
+            step="Step 2"
+            items={[
+              "Select Escrow Receiver in Freighter, then refresh this page.",
+              "Connect Freighter and verify the displayed G… address.",
+              "Click Register and approve the Testnet transaction.",
+              "Stop when Registered is shown. The Receiver needs no deposit.",
+            ]}
+            success="Registered · Spendable 0 · Receiving 0"
+          />
+          <WalletRoleCard
+            role="Payer"
+            step="Step 3"
+            items={[
+              "Select Escrow Payer in Freighter, then refresh this page.",
+              "Connect, verify the G… address, and click Register.",
+              "Open Deposit, enter a small amount such as 10 USDC, and approve.",
+              "Open Merge and merge the entire Receiving balance.",
+            ]}
+            success="Registered · Receiving 0 · Spendable greater than 0"
+          />
+        </div>
+      </section>
+      <div className="mb-6"><AccountSwitchReminder /></div>
+
       {error && <ErrorBox className="mb-6">{error}</ErrorBox>}
 
       {!wallet ? (
@@ -311,6 +345,41 @@ export default function Page() {
 
       <LogPanel logs={logs} />
     </PageShell>
+  );
+}
+
+function WalletRoleCard({
+  role,
+  step,
+  items,
+  success,
+}: {
+  role: "Payer" | "Receiver";
+  step: string;
+  items: string[];
+  success: string;
+}) {
+  const tone = role === "Payer"
+    ? "border-sky-500/25 bg-sky-500/5 text-sky-200"
+    : "border-emerald-500/25 bg-emerald-500/5 text-emerald-200";
+  return (
+    <div className={`rounded-lg border p-4 ${tone}`}>
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="font-semibold">{role}</h3>
+        <span className="text-xs opacity-80">{step}</span>
+      </div>
+      <ol className="mt-3 space-y-2">
+        {items.map((item, index) => (
+          <li key={item} className="flex gap-2 text-xs leading-relaxed text-neutral-300">
+            <span className="font-semibold text-current">{index + 1}.</span>
+            <span>{item}</span>
+          </li>
+        ))}
+      </ol>
+      <p className="mt-3 border-t border-white/10 pt-3 text-xs">
+        <strong>Done when:</strong> {success}
+      </p>
+    </div>
   );
 }
 const inputCls =

@@ -8,126 +8,151 @@ import { Addr } from "../addr";
 type Step = {
   id: number;
   phase: string;
-  actor: "Payer" | "Approver" | "Receiver" | "Auditor";
+  actor: "Setup" | "Payer" | "Approver" | "Receiver";
   title: string;
   summary: string;
   action: string;
   public: string[];
   private: string[];
   mechanics: string[];
+  expected: string;
   href: string;
 };
 
 const STEPS: Step[] = [
   {
     id: 1,
-    phase: "Setup",
-    actor: "Payer",
-    title: "Prepare confidential USDC",
+    phase: "Accounts",
+    actor: "Setup",
+    title: "Create three Testnet accounts",
     summary:
-      "The payer registers a confidential account, deposits USDC into the wrapper, and merges it into a spendable private balance.",
-    action: "Prepare payer wallet",
-    public: ["Payer address", "Deposit amount", "Deposit transaction"],
-    private: ["Resulting confidential balance", "Future escrow amount"],
+      "Create separate Freighter accounts for Payer, Approver, and Receiver. Keep their public G… addresses nearby.",
+    action: "Open wallet preparation",
+    public: ["Three public Testnet addresses"],
+    private: ["Recovery phrases and private keys"],
     mechanics: [
-      "Public USDC moves into the confidential-token wrapper.",
-      "The payer receives a hidden balance commitment.",
-      "Merge makes the receiving balance available to spend.",
+      "Set Freighter to Testnet.",
+      "Create and clearly label three different accounts.",
+      "Fund every account with Testnet XLM for transaction fees.",
     ],
+    expected: "You have three different G… addresses and each account has Testnet XLM.",
     href: "/wallet",
   },
   {
     id: 2,
-    phase: "Create",
-    actor: "Approver",
-    title: "Initialize one-milestone escrow",
+    phase: "Receiver",
+    actor: "Receiver",
+    title: "Register the receiver",
     summary:
-      "The approver fixes the payer, receiver, and approver addresses. The escrow contract registers as a confidential spender.",
-    action: "Initialize escrow",
-    public: ["Payer, receiver, and approver", "Escrow contract", "Initialized status"],
-    private: ["Confidential spender secret"],
+      "Register the Receiver before any payment is released so the confidential transfer has a valid destination.",
+    action: "Register receiver",
+    public: ["Receiver address", "Registration transaction"],
+    private: ["Receiver confidential keys"],
     mechanics: [
-      "The contract stores the three fixed roles.",
-      "A registration proof binds confidential keys to the escrow address.",
-      "The amount is not chosen or stored during initialization.",
+      "Switch Freighter to Escrow Receiver and refresh the Wallet page.",
+      "Connect and confirm the displayed G… address is the Receiver.",
+      "Click Register and approve the Testnet transaction.",
     ],
-    href: "/escrow/approver",
+    expected: "Wallet shows Registered and both balances begin at 0 USDC.",
+    href: "/wallet",
   },
   {
     id: 3,
-    phase: "Fund",
+    phase: "Payer",
     actor: "Payer",
-    title: "Fund the private milestone",
+    title: "Prepare the payer balance",
     summary:
-      "The payer enters the complete milestone amount. A browser-generated proof converts it into a confidential allowance controlled by the escrow.",
-    action: "Fund milestone",
-    public: ["Payer and escrow addresses", "Funded status", "Allowance expiry"],
-    private: ["Milestone amount", "Remaining payer balance", "Allowance value"],
+      "Register the Payer, deposit public Testnet USDC, and merge it into a spendable confidential balance.",
+    action: "Prepare payer",
+    public: ["Payer address", "Public deposit amount"],
+    private: ["Spendable confidential balance"],
     mechanics: [
-      "The amount never appears in the escrow call or escrow storage.",
-      "The proof demonstrates that the payer had enough confidential USDC.",
-      "The allowance itself represents the complete one-milestone escrow.",
+      "Switch Freighter to Escrow Payer, refresh, connect, and Register.",
+      "Deposit a small Testnet USDC amount such as 10 USDC.",
+      "Click Merge so Receiving becomes Spendable.",
     ],
-    href: "/escrow/payer",
+    expected: "Payer Wallet shows Registered, Receiving 0, and a positive Spendable USDC balance.",
+    href: "/wallet",
   },
   {
     id: 4,
-    phase: "Approve",
+    phase: "Initialize",
     actor: "Approver",
-    title: "Approve and release all funds",
+    title: "Initialize the escrow",
     summary:
-      "One approval creates a zero-knowledge proof and atomically releases the entire live allowance to the fixed receiver.",
-    action: "Approve & release",
-    public: ["Approver action", "Released status", "Receiver address", "Transaction time"],
-    private: ["Released amount", "Payer and receiver balances"],
+      "The connected Approver sets the fixed Payer and Receiver addresses. All three roles must be different.",
+    action: "Initialize escrow",
+    public: ["Payer, Receiver, and Approver addresses", "Initialized status"],
+    private: ["Escrow confidential key"],
     mechanics: [
-      "The release circuit requires the remaining allowance to equal zero.",
-      "The approver cannot select a smaller amount or another receiver.",
-      "If the transfer fails, the escrow cannot be marked Released.",
+      "Switch Freighter to Escrow Approver and refresh the Approver page.",
+      "Paste the Payer and Receiver G… addresses into the labeled fields.",
+      "Click Initialize and approve the Freighter request.",
     ],
+    expected: "Shared escrow state says Initialized and displays all three roles.",
     href: "/escrow/approver",
   },
   {
     id: 5,
-    phase: "Receive",
-    actor: "Receiver",
-    title: "Receive and merge",
+    phase: "Fund",
+    actor: "Payer",
+    title: "Fund the private milestone",
     summary:
-      "The receiver discovers the incoming confidential payment and merges it into their spendable private balance.",
-    action: "Merge received funds",
-    public: ["Receiver address", "Merge transaction"],
-    private: ["Incoming amount", "New spendable balance"],
+      "The Payer converts part of the spendable confidential balance into the escrow's complete private allowance.",
+    action: "Fund milestone",
+    public: ["Payer and escrow addresses", "Funded status"],
+    private: ["Milestone amount", "Remaining payer balance"],
     mechanics: [
-      "The receiver decrypts the incoming transfer locally.",
-      "Funds first arrive in a separate receiving commitment.",
-      "Merge combines receiving and spendable commitments without revealing either value.",
+      "Switch Freighter to Escrow Payer and refresh the Payer page.",
+      "Enter an amount no greater than the displayed Spendable balance.",
+      "Click Fund milestone privately and wait for proof generation.",
     ],
-    href: "/escrow/receiver",
+    expected: "Shared escrow state changes from Initialized to Funded.",
+    href: "/escrow/payer",
   },
   {
     id: 6,
-    phase: "Verify",
-    actor: "Auditor",
-    title: "Audit or disclose the payment",
+    phase: "Release",
+    actor: "Approver",
+    title: "Approve and release everything",
     summary:
-      "The designated auditor can decrypt the transfer, while a participant can prove this one payment to an external verifier.",
-    action: "Open verification tools",
-    public: ["Escrow transaction reference", "Proof validity"],
-    private: ["Amount, unless deliberately disclosed", "Other transfers and balances"],
+      "The Approver authorizes one atomic action that releases the escrow's complete private allowance to the fixed Receiver.",
+    action: "Approve & release",
+    public: ["Approver action", "Receiver address", "Released status"],
+    private: ["Released amount", "Participant balances"],
     mechanics: [
-      "Auditor ciphertexts provide standing access to the designated auditor.",
-      "Selective disclosure reveals only the chosen transfer amount.",
-      "The verifier checks the proof against the original on-chain event.",
+      "Switch Freighter to Escrow Approver and refresh the Approver page.",
+      "Confirm Shared escrow state says Funded.",
+      "Click Approve & release all and wait for proof generation.",
     ],
-    href: "/verify",
+    expected: "Shared escrow state changes from Funded to Released.",
+    href: "/escrow/approver",
+  },
+  {
+    id: 7,
+    phase: "Collect",
+    actor: "Receiver",
+    title: "Merge the received payment",
+    summary:
+      "The Receiver discovers the incoming confidential USDC and merges it into the spendable private balance.",
+    action: "Collect payment",
+    public: ["Receiver address", "Merge transaction"],
+    private: ["Incoming amount", "New spendable balance"],
+    mechanics: [
+      "Switch Freighter to Escrow Receiver and refresh the Receiver page.",
+      "Connect and wait for Receiving to show the incoming amount.",
+      "Click Merge received funds and approve the transaction.",
+    ],
+    expected: "Receiving becomes 0 and Spendable increases. The demo is complete.",
+    href: "/escrow/receiver",
   },
 ];
 
 const actorTone: Record<Step["actor"], string> = {
+  Setup: "border-neutral-500/40 bg-neutral-500/10 text-neutral-300",
   Payer: "border-sky-500/40 bg-sky-500/10 text-sky-300",
   Approver: "border-violet-500/40 bg-violet-500/10 text-violet-300",
   Receiver: "border-emerald-500/40 bg-emerald-500/10 text-emerald-300",
-  Auditor: "border-amber-500/40 bg-amber-500/10 text-amber-300",
 };
 
 export default function EscrowWalkthroughPage() {
@@ -224,7 +249,7 @@ export default function EscrowWalkthroughPage() {
           <p className="mt-5 text-sm leading-relaxed text-neutral-300">{step.summary}</p>
 
           <div className="mt-6 rounded-lg border border-neutral-800 bg-neutral-950/50 p-4">
-            <p className="text-xs font-medium uppercase tracking-wider text-neutral-500">What happens under the hood</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-neutral-500">Do this</p>
             <ol className="mt-3 space-y-3">
               {step.mechanics.map((item, index) => (
                 <li key={item} className="flex gap-3 text-sm leading-relaxed text-neutral-300">
@@ -235,6 +260,10 @@ export default function EscrowWalkthroughPage() {
                 </li>
               ))}
             </ol>
+          </div>
+
+          <div className="mt-4 rounded-lg border border-emerald-500/25 bg-emerald-500/5 p-3 text-sm text-emerald-200">
+            <strong className="font-semibold">Success looks like:</strong> {step.expected}
           </div>
 
           {escrow ? (

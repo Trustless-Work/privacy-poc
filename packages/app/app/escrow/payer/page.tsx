@@ -13,6 +13,7 @@ import { PageShell } from "../../page-shell";
 import { ErrorBox } from "../../error-box";
 import { LogPanel } from "../../log-panel";
 import { EscrowStateCard } from "../escrow-state";
+import { AccountSwitchReminder, BeginnerGuide } from "../guide";
 
 export default function PayerPage() {
   const { active } = useActiveDeployment();
@@ -65,6 +66,25 @@ export default function PayerPage() {
       {!escrowAddress && <ErrorBox className="mb-6">No singleton escrow is configured. Run the testnet deployment first.</ErrorBox>}
       {error && <ErrorBox className="mb-6">{error}</ErrorBox>}
       <div className="space-y-6">
+        <BeginnerGuide
+          step="Step 5 of 7"
+          title="Fund the escrow as the payer"
+          account="Escrow Payer"
+          before={[
+            "Freighter is on Testnet and the configured Payer account is selected.",
+            "Shared escrow state says Initialized.",
+            "The Payer is registered and has a positive Spendable USDC balance in Wallet.",
+          ]}
+          actions={[
+            "Connect the payer wallet below.",
+            "Confirm the connected G… address matches the Payer in Shared escrow state.",
+            "Enter an amount no greater than the displayed Spendable balance.",
+            "Click Fund milestone privately, approve Freighter, and wait for proof generation.",
+          ]}
+          expected="Shared escrow state changes from “Initialized” to “Funded”."
+          next={{ href: "/escrow/approver", label: "switch to the Approver account and release the payment" }}
+        />
+        <AccountSwitchReminder />
         <EscrowStateCard state={state} />
         {!wallet ? (
           <button onClick={connect} disabled={busy !== null || !escrowAddress} className="rounded bg-sky-600 px-4 py-2 font-medium hover:bg-sky-500 disabled:opacity-50">
@@ -76,8 +96,10 @@ export default function PayerPage() {
             <p className="mt-2 text-xs text-neutral-400">
               Connected: {wallet.address}. Spendable: {view ? stroopsToXlm(view.spendable) : "—"} USDC.
             </p>
-            {!view?.registered && <p className="mt-3 text-sm text-amber-300">Register, deposit USDC, and merge it in the account-holder wallet first.</p>}
+            {!view?.registered && <p className="mt-3 text-sm text-amber-300">Not ready: open Wallet, register this Payer account, deposit USDC, then merge it.</p>}
+            {view?.registered && view.spendable === 0n && <p className="mt-3 text-sm text-amber-300">Not ready: Spendable is 0 USDC. Deposit USDC in Wallet and merge the Receiving balance first.</p>}
             {state && wallet.address !== state.payer && <p className="mt-3 text-sm text-amber-300">This wallet is not the configured payer.</p>}
+            {state?.status !== "Initialized" && <p className="mt-3 text-sm text-amber-300">Not ready: escrow status must be Initialized.</p>}
             <div className="mt-4 flex flex-wrap items-end gap-3">
               <label className="text-xs text-neutral-400">Complete milestone amount
                 <span className="mt-1 flex rounded border border-neutral-700 bg-neutral-950">
@@ -90,7 +112,7 @@ export default function PayerPage() {
               </button>
             </div>
             <p className="mt-3 text-xs text-neutral-500">The allowance expires after roughly seven days. The amount is known to participants but never appears in the escrow call or storage.</p>
-            <Link href="/wallet" className="mt-4 inline-block text-xs text-indigo-300 hover:text-indigo-200">Open wallet preparation →</Link>
+            <Link href="/wallet" className="mt-4 inline-block text-xs font-medium text-indigo-300 hover:text-indigo-200">Need a Spendable balance? Open Wallet preparation →</Link>
           </section>
         )}
         <LogPanel logs={logs} />

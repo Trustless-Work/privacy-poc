@@ -8,6 +8,7 @@
  * and access-control error enums — to plain language.
  *
  * Codes mirror the contracts' error enums; keep in sync if those change:
+ *   - EscrowError        1–5
  *   - AccessControlError 2000–2009  (stellar_access::access_control)
  *   - OwnableError       2100–2102  (stellar_access::ownable)
  *   - ConfidentialTokenError 3500–3514
@@ -15,6 +16,12 @@
  */
 
 export const CONTRACT_ERRORS: Readonly<Record<number, string>> = {
+  // Singleton escrow
+  1: "This escrow was already initialized. Deploy a fresh singleton to start another demo.",
+  2: "This escrow has not been initialized yet. Initialize it from the Approver page first.",
+  3: "Payer, Receiver, and Approver must be three different Stellar accounts.",
+  4: "This action is not available in the escrow's current state. Check Shared escrow state and follow the next numbered step.",
+  5: "The private allowance expiry is invalid. Fund the escrow again with a future expiry.",
   // Access control
   2000: "Not authorized: this account lacks the required role.",
   2001: "The contract admin is not set.",

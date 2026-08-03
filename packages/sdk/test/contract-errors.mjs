@@ -29,6 +29,10 @@ check(
 check("3601 message mentions frozen", /frozen/i.test(CONTRACT_ERRORS[3601]));
 check("not-registered (3501) maps", humanizeContractError("Error(Contract, #3501)") === CONTRACT_ERRORS[3501]);
 check(
+  "invalid escrow parties (3) maps",
+  humanizeContractError("HostError: Error(Contract, #3)") === CONTRACT_ERRORS[3],
+);
+check(
   "policy denial (3602) maps",
   humanizeContractError("HostError: Error(Contract, #3602)") === CONTRACT_ERRORS[3602],
 );

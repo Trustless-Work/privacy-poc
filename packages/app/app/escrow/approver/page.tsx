@@ -11,6 +11,7 @@ import { PageShell } from "../../page-shell";
 import { ErrorBox } from "../../error-box";
 import { LogPanel } from "../../log-panel";
 import { EscrowStateCard } from "../escrow-state";
+import { AccountSwitchReminder, BeginnerGuide } from "../guide";
 
 export default function ApproverPage() {
   const { active } = useActiveDeployment();
@@ -23,6 +24,20 @@ export default function ApproverPage() {
   const [phase, setPhase] = useState<EscrowTxPhase | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [logs, log] = useLog(40);
+
+  const approver = controller?.approverAddress ?? "";
+  const cleanPayer = payer.trim();
+  const cleanReceiver = receiver.trim();
+  const addressPattern = /^G[A-Z2-7]{55}$/;
+  const roleError = (() => {
+    if (!cleanPayer || !cleanReceiver || !approver) return null;
+    if (!addressPattern.test(cleanPayer)) return "The payer address is not a valid Stellar G… address.";
+    if (!addressPattern.test(cleanReceiver)) return "The receiver address is not a valid Stellar G… address.";
+    if (cleanPayer === cleanReceiver || cleanPayer === approver || cleanReceiver === approver) {
+      return "Payer, receiver, and approver must be three different accounts.";
+    }
+    return null;
+  })();
 
   const refresh = useCallback(async () => {
     if (!escrowAddress) return setState(null);
@@ -51,6 +66,46 @@ export default function ApproverPage() {
       {!escrowAddress && <ErrorBox className="mb-6">No singleton escrow is configured. Run the testnet deployment first.</ErrorBox>}
       {error && <ErrorBox className="mb-6">{error}</ErrorBox>}
       <div className="space-y-6">
+        {!state ? (
+          <BeginnerGuide
+            step="Step 4 of 7"
+            title="Initialize the escrow as the approver"
+            account="Escrow Approver"
+            before={[
+              "Freighter is on Testnet and the Approver account is selected.",
+              "You have copied the Payer and Receiver public G… addresses.",
+              "Payer, Receiver, and Approver are three different accounts.",
+            ]}
+            actions={[
+              "Connect the approver wallet below.",
+              "Paste the Payer address and the Receiver address in the correct fields.",
+              "Check that neither address matches the connected Approver address.",
+              "Click Initialize singleton escrow and approve the Freighter request.",
+            ]}
+            expected="Shared escrow state changes from “Not initialized” to “Initialized” and shows all three roles."
+            next={{ href: "/escrow/payer", label: "switch to the Payer account and fund the milestone" }}
+          />
+        ) : (
+          <BeginnerGuide
+            step="Step 6 of 7"
+            title="Approve and release the full payment"
+            account="Escrow Approver"
+            before={[
+              "Freighter is on Testnet and the configured Approver account is selected.",
+              "Shared escrow state says Funded. If it says Initialized, the Payer must fund it first.",
+              "The Receiver was registered in the confidential wallet before release.",
+            ]}
+            actions={[
+              "Connect the approver wallet below.",
+              "Confirm the connected address matches the Approver shown in Shared escrow state.",
+              "Click Approve & release all and approve the Freighter request.",
+              "Wait while the app generates the proof and submits the transaction.",
+            ]}
+            expected="Shared escrow state changes to “Released”."
+            next={{ href: "/escrow/receiver", label: "switch to the Receiver account and collect the payment" }}
+          />
+        )}
+        <AccountSwitchReminder />
         <EscrowStateCard state={state} />
         {!controller ? (
           <button onClick={connect} disabled={busy !== null || !escrowAddress} className="rounded bg-violet-600 px-4 py-2 font-medium hover:bg-violet-500 disabled:opacity-50">
@@ -60,11 +115,15 @@ export default function ApproverPage() {
           <section className="rounded-lg border border-violet-500/25 bg-violet-500/5 p-5">
             <h2 className="font-semibold">Initialize fixed roles</h2>
             <p className="mt-2 text-xs text-neutral-400">This can happen only once. The connected wallet becomes the approver.</p>
+            <p className="mt-3 rounded border border-neutral-800 bg-neutral-950/60 p-3 text-xs text-neutral-300">
+              Connected Approver: <span className="break-all font-mono">{approver}</span>
+            </p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <AddressInput label="Payer address" value={payer} onChange={setPayer} />
               <AddressInput label="Receiver address" value={receiver} onChange={setReceiver} />
             </div>
-            <button onClick={run("initialize", (c) => c.initialize(payer.trim(), receiver.trim(), setPhase))} disabled={busy !== null || !payer || !receiver} className="mt-4 rounded bg-violet-600 px-4 py-2 text-sm font-semibold hover:bg-violet-500 disabled:opacity-50">
+            {roleError && <ErrorBox className="mt-3" size="sm">{roleError}</ErrorBox>}
+            <button onClick={run("initialize", (c) => c.initialize(cleanPayer, cleanReceiver, setPhase))} disabled={busy !== null || !cleanPayer || !cleanReceiver || Boolean(roleError)} className="mt-4 rounded bg-violet-600 px-4 py-2 text-sm font-semibold hover:bg-violet-500 disabled:opacity-50">
               {busy === "initialize" ? (phase === "proving" ? "Generating proof…" : "Initializing…") : "Initialize singleton escrow"}
             </button>
           </section>
