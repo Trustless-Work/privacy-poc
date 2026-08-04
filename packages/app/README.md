@@ -1,63 +1,202 @@
-# @ctd/app — confidential-token demo front-end
+# @ctd/app — Green Road confidential escrow front end
 
-The Next.js browser demo for the [confidential token](../../README.md). One page per persona:
+The Next.js browser application for the [Trustless Work Privacy PoC](../../README.md). It combines a scenario-first marketplace journey with the real Confidential Token wallet, factory, escrow, Auditor, and selective-disclosure operations.
 
-- **`/escrow`** — the guided six-step overview for the singleton Trustless Work PoC.
-- **`/escrow/payer`** — connect the fixed payer and privately fund the complete one-milestone allowance.
-- **`/escrow/approver`** — initialize the pre-deployed contract once, then approve and atomically release all funds.
-- **`/escrow/receiver`** — connect the fixed receiver and merge released funds into spendable balance.
+## Current routes
 
-These role pages execute real SDK and contract calls when `NEXT_PUBLIC_ESCROW_CONTRACT_ID` and the matching USDC deployment variables are configured. `scripts/deploy.ts` writes them to `.env.local` after a successful testnet deployment.
-- **`/wallet`** — connects Freighter, derives your confidential keys, and runs the five operations (register / deposit / merge / transfer / withdraw) with **proofs generated in the browser** (bb.js). Balances are reconstructed locally from chain events and shown with a "matches chain" badge (`StateEngine.verifyAgainstChain`).
-- **`/verify`** — the disclosure receiver: mint a one-time request, verify the returned proof against the chain. No wallet needed.
-- **`/auditor`** — decrypt transfer amounts with the registered auditor key.
+- **`/`** — Green Road marketplace landing page.
+- **`/escrow`** — guided one-milestone order journey.
+- **`/escrow/approver`** — create fresh escrow instances through the shared factory, initialize fixed roles, and submit the atomic full release.
+- **`/escrow/payer`** — connect the configured Payer and fund the selected escrow with one private allowance.
+- **`/escrow/receiver`** — inspect the selected escrow and continue to Receiver history, merge, and withdrawal.
+- **`/wallet`** — connect Freighter, derive confidential keys, register, deposit, merge, transfer, withdraw, sync, and inspect owner-visible history.
+- **`/auditor`** — decrypt supported activity with the configured Auditor key.
+- **`/verify`** — create and verify supported selective-disclosure requests.
+- **`/advanced`** — configure alternate Confidential Token deployments.
+- **`/admin`** — token and compliance-policy administration tools.
 
-The orchestration (prover cache, Freighter signing, the five ops) lives in `lib/wallet.ts` over [`@ctd/sdk`](../sdk/README.md).
+## Factory-based escrow flow
+
+The app no longer assumes one singleton escrow.
+
+1. The protocol is deployed once and exposes a shared factory.
+2. An Approver enters Payer and Receiver addresses.
+3. Freighter signs the factory `deploy_escrow` transaction.
+4. The app receives the fresh escrow contract address.
+5. The browser generates registration material bound to that address.
+6. Freighter signs initialization.
+7. The new escrow is appended to browser-local history and selected as active.
+
+The top navigation exposes an **Escrow** selector. The same participant addresses may be reused in multiple independent contracts.
+
+Creating another escrow does not require rerunning `scripts/deploy.ts`.
 
 ## Run
 
+From the repository root:
+
 ```bash
-pnpm build:sdk && pnpm dev   # http://localhost:3000
+pnpm install
+pnpm --filter @ctd/sdk build
+pnpm --filter @ctd/app dev
 ```
 
-The confidential `sk` is derived deterministically from a Freighter `signMessage` signature over a deployment-bound message (Ed25519 signatures are deterministic, so the key is recoverable on any device and useless on other deployments), then cached in `localStorage` — a production wallet would store it encrypted.
+The app is available at `http://localhost:3000`.
 
-## Event history & recovery
+The app imports the compiled SDK. After SDK source changes, rebuild it. If Next.js still loads stale exports:
 
-Balances are reconstructed in the browser from chain events and persisted in `localStorage` (the SDK's `StateEngine` — see [State reconstruction & retention](../sdk/README.md#state-reconstruction--retention) for the mechanics). Green Road uses Umbra's account-scoped history to rebuild an account on a new origin or migrate a stale cache, then reads the live tail from Stellar RPC. Every rebuilt opening is checked against the on-chain Pedersen commitment before the wallet can spend it.
+```bash
+rm -rf packages/app/.next
+pnpm --filter @ctd/sdk build
+pnpm --filter @ctd/app dev
+```
 
-The public demo defaults to `https://umbra-production-d30f.up.railway.app`. Override or disable that default in `lib/deployment.ts`, or configure another compatible deployment:
+## Deployment configuration
+
+`scripts/deploy.ts` writes the protocol manifest to `packages/app/.env.local` after a successful testnet deployment.
+
+Expected values include:
+
+```text
+NEXT_PUBLIC_TOKEN_CONTRACT_ID=C...
+NEXT_PUBLIC_VERIFIER_CONTRACT_ID=C...
+NEXT_PUBLIC_AUDITOR_CONTRACT_ID=C...
+NEXT_PUBLIC_UNDERLYING_CONTRACT_ID=C...
+NEXT_PUBLIC_FACTORY_CONTRACT_ID=C...
+NEXT_PUBLIC_DEPLOYED_AT_LEDGER=123456
+NEXT_PUBLIC_AUDITOR_ID=0
+NEXT_PUBLIC_AUDITOR_SECRET_HEX=0x...
+```
+
+A legacy/fallback `NEXT_PUBLIC_ESCROW_CONTRACT_ID` may exist, but normal current usage creates and selects escrows through the factory.
+
+Never expose a production Auditor secret through `NEXT_PUBLIC_*` configuration. The current value is demo-only.
+
+## Confidential key derivation
+
+The wallet derives its confidential secret deterministically from a Freighter `signMessage` signature over a deployment-bound message.
+
+Consequences:
+
+- the same Freighter account can rederive the same confidential key for the same token deployment;
+- a different token deployment derives a different key;
+- authorized recovery can work on another compatible origin when complete history exists; and
+- the current `localStorage` cache is convenient but not production-grade key custody.
+
+## Event history and recovery
+
+Balances are reconstructed by the SDK `StateEngine` from encrypted protocol events.
+
+Green Road uses:
+
+- **Umbra account history** for durable account-scoped recovery;
+- **Stellar RPC** for current reads and the recent live tail; and
+- an optional **Goldsky indexer** for global durable history.
+
+Configure Umbra:
 
 ```bash
 # packages/app/.env.local
 NEXT_PUBLIC_UMBRA_URL=https://your-umbra-api.example
 ```
 
-The optional Goldsky indexer remains the global full-history source for recipient discovery and old selective-disclosure references:
+The public demo defaults to the configured public Umbra deployment in `lib/deployment.ts`.
 
-Point the app at a deployed indexer to get full history:
+Configure the optional global indexer:
 
 ```bash
 # packages/app/.env.local
 NEXT_PUBLIC_INDEXER_URL=https://confidential-token-indexer.<account>.workers.dev
 ```
 
-Without Umbra or Goldsky, the app runs **RPC-only**: events older than the ~7-day window are unavailable, so a fresh client must **sync at least once per retention period** or an aged-out opening becomes unrecoverable. See [`@ctd/indexer`](../indexer/README.md) to deploy the global indexer.
+The checked-in Goldsky pipeline does not yet ingest `set_spender`, `revoke_spender`, or `spender_transfer`, so Umbra is the preferred recovery source for the current escrow flow.
+
+### Recovery algorithm
+
+When Umbra is available, each sync:
+
+1. fetches account history from the deployment ledger;
+2. normalizes Umbra and RPC event identities;
+3. deduplicates by cursor and logical payload identity;
+4. replays account state from zero;
+5. applies the current RPC tail without overlap; and
+6. checks reconstructed openings against the live on-chain commitments.
+
+The history provider is not trusted as balance authority.
+
+### Owner-visible escrow history
+
+`set_spender` provides an owner-encrypted post-funding spendable checkpoint. The wallet derives the allowance from the verified balance transition.
+
+A later `spender_transfer` is paired with that allowance. Since the PoC enforces complete allowance exhaustion, the Payer can see the release amount in local history.
+
+This does not give the Payer a normal sender selective-disclosure proof. The escrow contract generated the delegated transfer's ephemeral cryptography, so the UI labels this path **reconstructed from allowance** and **spender proof only**.
+
+See [Recovery model](../../docs/recovery-model.md).
+
+## Browser-local state
+
+The app currently persists:
+
+- derived confidential key cache;
+- reconstructed private openings;
+- sync cursor and cache version;
+- known escrow IDs per token deployment; and
+- active escrow selection.
+
+Do not clear browser storage as a first troubleshooting action. Umbra may recover balances, but prior escrow IDs are not globally discoverable because the factory emits no `escrow_deployed` event.
 
 ## Cross-origin isolation
 
-Browser proving needs `window.crossOriginIsolated === true` (SharedArrayBuffer, used by bb.js's Web Worker). The app sets `COOP: same-origin` + `COEP: credentialless` in `next.config.mjs`. `credentialless` (not `require-corp`) is intentional: it lets the RPC `fetch` through without needing CORS headers on the Stellar testnet endpoint.
+Browser proving needs `window.crossOriginIsolated === true` because bb.js uses `SharedArrayBuffer` and Web Workers.
+
+The app sets:
+
+- `Cross-Origin-Opener-Policy: same-origin`; and
+- `Cross-Origin-Embedder-Policy: credentialless`.
+
+`credentialless` is intentional because the browser must fetch the Stellar testnet RPC without requiring resource-side CORP headers.
 
 ## Deploy
 
-The app deploys to **Cloudflare Workers** via `@opennextjs/cloudflare` (`pnpm deploy:app`, config in `wrangler.jsonc`). Next builds with the `--webpack` flag — the bb.js handling below is webpack-specific.
+The app deploys to Cloudflare Workers through `@opennextjs/cloudflare`:
 
-## Critical: bb.js must never be webpack-bundled
+```bash
+pnpm --filter @ctd/app deploy
+```
 
-bb.js's pre-built browser bundle declares a top-level `__webpack_exports__` that collides with webpack's own module runtime, and it spawns its wasm Web Worker via `new Worker(new URL('./main.worker.js', import.meta.url))` (marked `webpackIgnore`) — so once bundled into a hashed `_next` chunk the worker can't be found and proving hangs forever (you'll see a blank page or a silent hang).
+Configuration lives in `wrangler.jsonc` and `open-next.config.ts`.
 
-The fix is already in place:
+## Critical: bb.js must not be webpack-bundled
 
-1. `scripts/vendor-bb.mjs` (run by `predev`/`prebuild`) copies bb.js's `dest/browser/` into `public/vendor/bb/` (git-ignored, regenerated each build).
-2. The webpack client config aliases the bare `@aztec/bb.js` specifier to `false`.
-3. `lib/bb-loader.ts` overrides the SDK's `setUltraHonkBackendLoader` to import `/vendor/bb/index.js` as **native ESM** from that stable path at runtime. The loader's `new Function` must stay lazy — Cloudflare Workers forbid eval at the top level.
+bb.js's browser distribution declares a top-level webpack runtime symbol and creates its WASM worker through a stable relative URL. Bundling it into a hashed Next.js client chunk breaks worker resolution and may cause proof generation to hang.
+
+The current solution is load-bearing:
+
+1. `scripts/vendor-bb.mjs` copies `@aztec/bb.js` browser assets into `public/vendor/bb/` during `predev` and `prebuild`.
+2. The client webpack configuration aliases the bare `@aztec/bb.js` specifier to `false`.
+3. `lib/bb-loader.ts` configures the SDK to import `/vendor/bb/index.js` as native ESM at runtime.
+4. The loader remains lazy because Cloudflare Workers reject top-level eval-like behavior.
+
+Do not simplify this path without validating an actual browser proof and production build.
+
+## Validation
+
+```bash
+pnpm --filter @ctd/sdk typecheck
+pnpm --filter @ctd/sdk test:fast
+pnpm --filter @ctd/app build
+```
+
+For recovery or event changes, also run the focused SDK checks listed in [AGENTS.md](AGENTS.md).
+
+## Current limitations
+
+- one escrow contract represents one milestone;
+- full allowance release only;
+- Payer revocation remains possible before release;
+- browser-local escrow discovery;
+- incomplete global indexer coverage for spender events;
+- public addresses, timing, deposits, withdrawals, and transaction graph;
+- browser-local demo key caching; and
+- developer-preview cryptography without production audit approval.
