@@ -87,12 +87,23 @@ const engine = new StateEngine({
 
 const state = await engine.sync();
 const expectedR = deriveSpendR(keys.vk, sigma);
+const disclosed = engine.discloseHistoryAmounts(events);
+// A prior Umbra request may have failed or returned partial history after the
+// v3 migration marker was saved. A later sync must repair that stale cache.
+await store.save({
+  ...state,
+  cacheVersion: 3,
+  spendable: { v: 750_0000000n, r: 1n },
+});
+const repaired = await engine.sync();
 const checks = [
   ["replaces the stale 750 balance", state.spendable.v === finalBalance],
   ["recovers the matching blinding factor", state.spendable.r === expectedR],
   ["migrates the cache to v3", state.cacheVersion === 3],
   ["preserves registration", state.registered],
   ["advances through the live RPC tail", state.syncedLedger === 20],
+  ["discloses the outgoing amount from consecutive wallet openings", disclosed.get(events[3].cursor) === 800_0000000n],
+  ["repairs a stale v3 cache on every Umbra sync", repaired.spendable.v === finalBalance && repaired.spendable.r === expectedR],
 ];
 
 let failed = 0;

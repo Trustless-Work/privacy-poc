@@ -25,6 +25,7 @@ import { TxLink } from "../tx-link";
 export function EventsPanel({ wallet, reloadKey = 0 }: { wallet: ConfidentialWallet; reloadKey?: number }) {
   const { active } = useActiveDeployment();
   const [events, setEvents] = useState<ConfidentialEvent[] | null>(null);
+  const [amounts, setAmounts] = useState<Map<string, bigint>>(new Map());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,7 +33,9 @@ export function EventsPanel({ wallet, reloadKey = 0 }: { wallet: ConfidentialWal
     setBusy(true);
     setError(null);
     try {
-      setEvents(await wallet.listEvents());
+      const next = await wallet.listEvents();
+      setAmounts(wallet.discloseHistoryAmounts(next));
+      setEvents(next);
     } catch (e) {
       setError(errMsg(e));
     } finally {
@@ -78,7 +81,13 @@ export function EventsPanel({ wallet, reloadKey = 0 }: { wallet: ConfidentialWal
       {events && (
         <ul className="space-y-2">
           {events.map((ev) => (
-            <EventRow key={ev.cursor} ev={ev} wallet={wallet} assetCode={active.assetCode} />
+            <EventRow
+              key={ev.cursor}
+              ev={ev}
+              wallet={wallet}
+              assetCode={active.assetCode}
+              disclosedAmount={amounts.get(ev.cursor)}
+            />
           ))}
         </ul>
       )}
@@ -88,7 +97,17 @@ export function EventsPanel({ wallet, reloadKey = 0 }: { wallet: ConfidentialWal
 
 type Direction = "received" | "sent" | null;
 
-function EventRow({ ev, wallet, assetCode }: { ev: ConfidentialEvent; wallet: ConfidentialWallet; assetCode: string }) {
+function EventRow({
+  ev,
+  wallet,
+  assetCode,
+  disclosedAmount,
+}: {
+  ev: ConfidentialEvent;
+  wallet: ConfidentialWallet;
+  assetCode: string;
+  disclosedAmount?: bigint;
+}) {
   const [showDisclose, setShowDisclose] = useState(false);
 
   const isPayment = ev.type === "transfer" || ev.type === "spender_transfer";
@@ -101,11 +120,15 @@ function EventRow({ ev, wallet, assetCode }: { ev: ConfidentialEvent; wallet: Co
   // Transfer amounts are confidential on-chain but decryptable by either party.
   // Decrypt for display; `loading` until resolved, `value` null if unrecoverable.
   const [amt, setAmt] = useState<{ loading: boolean; value: bigint | null }>({
-    loading: isPayment,
-    value: null,
+    loading: isPayment && disclosedAmount === undefined,
+    value: disclosedAmount ?? null,
   });
   useEffect(() => {
     if (ev.type !== "transfer" && ev.type !== "spender_transfer") return;
+    if (disclosedAmount !== undefined) {
+      setAmt({ loading: false, value: disclosedAmount });
+      return;
+    }
     let cancelled = false;
     wallet
       .transferAmount(ev as TransferEvent | SpenderTransferEvent)
@@ -114,7 +137,7 @@ function EventRow({ ev, wallet, assetCode }: { ev: ConfidentialEvent; wallet: Co
     return () => {
       cancelled = true;
     };
-  }, [ev, wallet]);
+  }, [ev, wallet, disclosedAmount]);
 
   return (
     <li className="border-2 border-neutral-950 bg-white p-3 text-neutral-950 shadow-[2px_2px_0_#151515]">

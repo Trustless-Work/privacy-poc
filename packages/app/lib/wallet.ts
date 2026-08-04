@@ -327,6 +327,17 @@ export class ConfidentialWallet {
   }
 
   /**
+   * Disclose payment amounts to the connected wallet by replaying its complete
+   * history oldest-first. For outgoing rows (including Umbra-normalized escrow
+   * funding), the wallet decrypts each post-operation spendable checkpoint and
+   * subtracts it from the preceding verified opening. This needs no plaintext
+   * amount from Umbra and no recipient key.
+   */
+  discloseHistoryAmounts(events: ConfidentialEvent[]): Map<string, bigint> {
+    return this.engine.discloseHistoryAmounts(events);
+  }
+
+  /**
    * Other accounts with a `register` event — the way to enumerate possible
    * transfer recipients. With an indexer this covers the full history; without
    * one, an account registered more than ~7 days ago won't appear.
