@@ -15,15 +15,13 @@ type CastMember = {
   image?: string;
   label: string;
   action: string;
-  pixelate?: boolean;
 };
 
 const CAST: Record<"Alberto" | "Ziggy" | "Buju B.", CastMember> = {
   Alberto: {
-    image: "/characters/alberto.png",
+    image: "/characters/alberto-pixel.svg",
     label: "Customer",
     action: "Places and funds the private order",
-    pixelate: true,
   },
   Ziggy: {
     image: "/characters/ziggy.png",
@@ -45,16 +43,19 @@ function CharacterPortrait({ person, variant }: { person: CastMember; variant: P
   const frameClass = variant === "card"
     ? "mx-auto aspect-square w-full max-w-44 border-[3px] bg-amber-300 shadow-[4px_4px_0_#151515]"
     : "h-28 w-28 border-[3px] bg-white shadow-[3px_3px_0_#151515] sm:h-32 sm:w-32";
-  const imageClass = person.pixelate
-    ? "h-1/4 w-1/4 scale-[4] object-cover contrast-[1.08] saturate-[.9] [image-rendering:pixelated]"
-    : "h-full w-full object-contain [image-rendering:pixelated]";
 
   return (
     <span
       className={`grid shrink-0 place-items-center overflow-hidden border-neutral-950 text-4xl ${frameClass}`}
       aria-hidden
     >
-      {person.image ? <img src={person.image} alt="" className={imageClass} /> : person.emoji}
+      {person.image ? (
+        <img
+          src={person.image}
+          alt=""
+          className="h-full w-full object-contain [image-rendering:pixelated]"
+        />
+      ) : person.emoji}
     </span>
   );
 }
