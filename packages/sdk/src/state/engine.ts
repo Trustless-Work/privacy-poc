@@ -84,61 +84,19 @@ export class StateEngine {
 
   /**
    * Reveal payment amounts to the owner by replaying their ciphertext history.
-   * Outgoing amounts are derived from consecutive spendable openings, which
-   * also covers set-spender rows normalized by an indexer as transfers.
+   * Incoming amounts are decrypted directly from their recipient ciphertext.
+   * Outgoing amounts are intentionally not inferred from balance deltas: an
+   * account-history provider may omit an earlier checkpoint, making that
+   * arithmetic plausible but wrong. The wallet decrypts the event's
+   * sender-auditor channel directly instead.
    */
   discloseHistoryAmounts(events: ConfidentialEvent[]): Map<string, bigint> {
     const amounts = new Map<string, bigint>();
-    let spendable = 0n;
-    let receiving = 0n;
-    let hasOpening = false;
-    const ordered = [...events].sort((a, b) => a.ledger - b.ledger || a.cursor.localeCompare(b.cursor));
-
-    for (const ev of ordered) {
-      switch (ev.type) {
-        case "register":
-          if (ev.account === this.cfg.address) {
-            spendable = 0n;
-            receiving = 0n;
-            hasOpening = true;
-          }
-          break;
-        case "deposit":
-          if (ev.to === this.cfg.address && hasOpening) receiving += ev.amount;
-          break;
-        case "merge":
-          if (ev.account === this.cfg.address && hasOpening) {
-            spendable += receiving;
-            receiving = 0n;
-          }
-          break;
-        case "withdraw":
-          if (ev.from === this.cfg.address) {
-            spendable = this.openSpendable(ev.bTilde, ev.sigma).v;
-            hasOpening = true;
-          }
-          break;
-        case "transfer": {
-          if (ev.from === this.cfg.address) {
-            const next = this.openSpendable(ev.bTilde, ev.sigma).v;
-            if (hasOpening && next <= spendable) amounts.set(ev.cursor, spendable - next);
-            spendable = next;
-            hasOpening = true;
-          }
-          if (ev.to === this.cfg.address) {
-            const incoming = this.decryptIncoming(ev.rE, ev.vTilde, ev.sigma).vTx;
-            amounts.set(ev.cursor, incoming);
-            if (hasOpening) receiving += incoming;
-          }
-          break;
-        }
-        case "spender_transfer":
-          if (ev.to === this.cfg.address) {
-            const incoming = this.decryptIncoming(ev.rE, ev.vTilde, ev.sigmaA).vTx;
-            amounts.set(ev.cursor, incoming);
-            if (hasOpening) receiving += incoming;
-          }
-          break;
+    for (const ev of events) {
+      if (ev.type === "transfer" && ev.to === this.cfg.address) {
+        amounts.set(ev.cursor, this.decryptIncoming(ev.rE, ev.vTilde, ev.sigma).vTx);
+      } else if (ev.type === "spender_transfer" && ev.to === this.cfg.address) {
+        amounts.set(ev.cursor, this.decryptIncoming(ev.rE, ev.vTilde, ev.sigmaA).vTx);
       }
     }
     return amounts;

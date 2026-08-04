@@ -43,9 +43,7 @@ import {
   scalarMul,
   H,
   pointCoords,
-  ecdh,
-  decryptWithDomain,
-  DOMAIN,
+  decryptTransferSenderAmountAsOriginator,
   type ConfidentialEvent,
   type TransferEvent,
   type SpenderTransferEvent,
@@ -427,12 +425,14 @@ export class ConfidentialWallet {
    * Decrypt a confidential transfer's amount for local display, from whichever
    * side this wallet is on:
    *   - inbound (to === me):  ECDH with this wallet's viewing key.
-   *   - outbound (from === me): re-derive the ephemeral scalar (§15.2) and ECDH
-   *     against the recipient's stored viewing key — the same recovery as
-   *     discloseSent, minus the proof.
-   * Returns null when the amount can't be recovered here: an outbound transfer
-   * not built with these keys (non-deterministic r_e), or a recipient with no
-   * on-chain account record. The amount stays confidential on-chain regardless.
+   *   - outbound (from === me): re-derive the ephemeral scalar (§15.2) and
+   *     decrypt the sender-auditor amount channel with the public auditor key.
+   *     This also works for escrow funding normalized by Umbra as a transfer,
+   *     whose recipient ciphertext is not a normal recipient-viewing-key
+   *     channel.
+   * Returns null when the amount can't be recovered here, such as an outbound
+   * transfer not built with these keys (non-deterministic r_e). The amount
+   * stays confidential on-chain regardless.
    */
   async transferAmount(event: TransferEvent | SpenderTransferEvent): Promise<bigint | null> {
     const sigma = event.type === "spender_transfer" ? event.sigmaA : event.sigma;
@@ -443,10 +443,10 @@ export class ConfidentialWallet {
     if (event.type === "transfer" && event.from === this.address) {
       const rEScalar = this.recoverRE(event);
       if (rEScalar === null) return null;
-      const recipient = await this.client.confidentialBalance(event.to);
-      if (!recipient) return null;
-      const sBx = ecdh(rEScalar, recipient.viewingPublicKey);
-      const vTx = decryptWithDomain(event.vTilde, DOMAIN.TX_AMOUNT, sBx, event.sigma);
+      const owner = await this.client.confidentialBalance(this.address);
+      if (!owner) return null;
+      const auditorPublicKey = await this.client.auditorKey(owner.auditorId);
+      const vTx = decryptTransferSenderAmountAsOriginator(rEScalar, auditorPublicKey, event);
       // A wrong key yields garbage far outside the 127-bit amount range.
       if (vTx >= 1n << 127n) return null;
       return vTx;

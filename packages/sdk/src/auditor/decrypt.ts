@@ -54,6 +54,26 @@ export function auditTransferSenderChannel(
   return { amount: frMod(ev.vAudS - mV), senderBalance: frMod(ev.bAudS - mB) };
 }
 
+/**
+ * Decrypt the sender-auditor amount as the transfer originator.
+ *
+ * The sender can re-derive the event's ephemeral scalar `r_e` and combine it
+ * with the public auditor key (`K_aud = k·H`). This produces the same ECDH
+ * secret as the auditor's `k·R_e`, without exposing either private key. It is
+ * the reliable owner-side amount channel for set-spender events that an
+ * indexer normalizes as transfers: their recipient ciphertext is addressed to
+ * the delegated spender protocol, not to a normal recipient viewing key.
+ */
+export function decryptTransferSenderAmountAsOriginator(
+  rEScalar: bigint,
+  auditorPublicKey: Point,
+  ev: Pick<TransferEvent, "sigma" | "vAudS">,
+): bigint {
+  const sX = ecdh(rEScalar, auditorPublicKey);
+  const [mV] = spongeSqueeze2(DOMAIN.AUDITOR_SENDER, sX, ev.sigma);
+  return frMod(ev.vAudS - mV);
+}
+
 /** Decrypt a transfer's recipient-auditor channel with the auditor secret `k`. */
 export function auditTransferRecipientChannel(
   k: bigint,

@@ -102,7 +102,7 @@ const checks = [
   ["migrates the cache to v3", state.cacheVersion === 3],
   ["preserves registration", state.registered],
   ["advances through the live RPC tail", state.syncedLedger === 20],
-  ["discloses the outgoing amount from consecutive wallet openings", disclosed.get(events[3].cursor) === 800_0000000n],
+  ["does not infer outgoing amounts from potentially incomplete history", disclosed.get(events[3].cursor) === undefined],
   ["repairs a stale v3 cache on every Umbra sync", repaired.spendable.v === finalBalance && repaired.spendable.r === expectedR],
 ];
 
