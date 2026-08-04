@@ -98,7 +98,13 @@ export function parseUmbraEvent(row: UmbraEventRow): ConfidentialEvent | null {
 function umbraEventCoords(id: string): { opIndex: number; eventIndex: number } {
   const match = /^(?:\d+)-(\d+)-(\d+)$/.exec(id);
   if (!match) throw new Error(`unrecognized Umbra event id "${id}"`);
-  return { opIndex: Number(match[1]), eventIndex: Number(match[2]) };
+  // Umbra ids are `<ledger>-<transactionIndex>-<operationIndex>`. Stellar
+  // RPC's event id does not include the transaction index; its normalized
+  // identity is `(ledger, txHash, operationIndex, eventIndex)`. Confidential
+  // token calls emit one protocol event per operation, so eventIndex is zero.
+  // Treating Umbra's transaction index as the operation index gave the same
+  // on-chain event two cursors and caused Umbra + RPC history to appear twice.
+  return { opIndex: Number(match[2]), eventIndex: 0 };
 }
 
 function umbraData(row: UmbraEventRow): EventDataAccessor {

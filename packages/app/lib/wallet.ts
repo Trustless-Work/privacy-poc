@@ -331,8 +331,10 @@ export class ConfidentialWallet {
    * subtracts it from the preceding verified opening. This needs no plaintext
    * amount from Umbra and no recipient key.
    */
-  discloseHistoryAmounts(events: ConfidentialEvent[]): Map<string, bigint> {
-    return this.engine.discloseHistoryAmounts(events);
+  discloseHistoryAmounts(events: ConfidentialEvent[]): Promise<Map<string, bigint>> {
+    // listEvents() is newest-first for display; state replay must be oldest-first
+    // (including multiple events emitted in the same ledger).
+    return this.engine.discloseHistoryAmounts([...events].reverse());
   }
 
   /**

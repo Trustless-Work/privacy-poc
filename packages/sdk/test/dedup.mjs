@@ -15,8 +15,11 @@ function check(name, cond) {
   }
 }
 
-// Minimal events — dedupeById only reads `.cursor` (id) and `.ledger`.
-const ev = (cursor, ledger, type = "deposit") => ({ type, cursor, ledger, txHash: "tx" });
+// Minimal deposit events with enough protocol identity for cross-source dedupe.
+const ev = (cursor, ledger, type = "deposit", txHash = `tx-${cursor}`) =>
+  type === "merge"
+    ? { type, cursor, ledger, txHash, account: "GACCOUNT" }
+    : { type, cursor, ledger, txHash, from: "GFROM", to: "GTO", amount: BigInt(ledger) };
 
 console.log("dedupeById:");
 
@@ -61,7 +64,17 @@ console.log("dedupeById:");
   );
 }
 
-// 4. Empty input is fine.
+// 4. Umbra and RPC once assigned different cursors to the same logical event
+//    (`ledger-transaction-op` vs RPC's `ledger-txHash-op-event`). The payload
+//    identity is the final guard against replaying that event twice.
+{
+  const umbra = ev("20-tx-9-0", 20, "deposit", "same-tx");
+  const rpc = ev("20-tx-0-0", 20, "deposit", "same-tx");
+  const out = dedupeById([umbra, rpc]);
+  check("dedupes one logical event with source-specific cursors", out.length === 1);
+}
+
+// 5. Empty input is fine.
 check("handles empty input", dedupeById([]).length === 0);
 
 console.log(`\ndedup: ${pass} passed, ${fail} failed`);

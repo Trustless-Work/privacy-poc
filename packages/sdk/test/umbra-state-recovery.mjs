@@ -4,6 +4,7 @@ import {
   deriveKeys,
   deriveSpendR,
   encryptBalance,
+  commit,
 } from "../src/crypto/index.ts";
 import { StateEngine } from "../src/state/engine.ts";
 import { MemoryStore } from "../src/state/store.ts";
@@ -74,6 +75,10 @@ const client = {
     getHealth: async () => ({ oldestLedger: 1 }),
     getEvents: async () => ({ events: [], cursor: undefined, latestLedger: 20 }),
   },
+  confidentialBalance: async () => ({
+    spendableBalance: commit(finalBalance, deriveSpendR(keys.vk, sigma)),
+    receivingBalance: commit(0n, 0n),
+  }),
 };
 const accountHistory = { fetchAccountHistory: async () => events };
 const engine = new StateEngine({
@@ -87,7 +92,11 @@ const engine = new StateEngine({
 
 const state = await engine.sync();
 const expectedR = deriveSpendR(keys.vk, sigma);
-const disclosed = engine.discloseHistoryAmounts(events);
+const disclosed = await engine.discloseHistoryAmounts(events);
+const duplicated = await engine.discloseHistoryAmounts([
+  ...events,
+  { ...events[1], cursor: "11-deposit-wrong-source-coordinates" },
+]);
 // A prior Umbra request may have failed or returned partial history after the
 // v3 migration marker was saved. A later sync must repair that stale cache.
 await store.save({
@@ -102,7 +111,8 @@ const checks = [
   ["migrates the cache to v3", state.cacheVersion === 3],
   ["preserves registration", state.registered],
   ["advances through the live RPC tail", state.syncedLedger === 20],
-  ["does not infer outgoing amounts from potentially incomplete history", disclosed.get(events[3].cursor) === undefined],
+  ["discloses outgoing amount from complete verified openings", disclosed.get(events[3].cursor) === 800_0000000n],
+  ["dedupes logical events before calculating outgoing amounts", duplicated.get(events[3].cursor) === 800_0000000n],
   ["repairs a stale v3 cache on every Umbra sync", repaired.spendable.v === finalBalance && repaired.spendable.r === expectedR],
 ];
 

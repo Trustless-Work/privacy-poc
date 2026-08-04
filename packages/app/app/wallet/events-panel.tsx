@@ -34,7 +34,7 @@ export function EventsPanel({ wallet, reloadKey = 0 }: { wallet: ConfidentialWal
     setError(null);
     try {
       const next = await wallet.listEvents();
-      setAmounts(wallet.discloseHistoryAmounts(next));
+      setAmounts(await wallet.discloseHistoryAmounts(next));
       setEvents(next);
     } catch (e) {
       setError(errMsg(e));
@@ -160,7 +160,7 @@ function EventRow({
             className="text-xs text-neutral-600"
             title="This transfer's R_e doesn't match the ephemeral scalar derived from this wallet's keys (it was sent with different keys or a non-deterministic r_e), so a D-sender proof can't be built."
           >
-            not disclosable
+            third-party proof unavailable
           </span>
         )}
       </div>

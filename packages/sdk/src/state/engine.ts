@@ -33,7 +33,7 @@ import { deriveSpendR, deriveTxBlind, poseidonWithDomain } from "../crypto/posei
 import type { KeyPair } from "../crypto/keys.js";
 import type { ChainClient } from "../chain/client.js";
 import { type ConfidentialEvent } from "../chain/events.js";
-import { hybridFetchEvents } from "../chain/event-source.js";
+import { dedupeById, eventIdentity, hybridFetchEvents } from "../chain/event-source.js";
 import type { IndexerClient } from "../chain/indexer.js";
 import type { UmbraHistoryClient } from "../chain/umbra-history.js";
 import type { StateStore } from "./store.js";
@@ -83,20 +83,44 @@ export class StateEngine {
   }
 
   /**
-   * Reveal payment amounts to the owner by replaying their ciphertext history.
-   * Incoming amounts are decrypted directly from their recipient ciphertext.
-   * Outgoing amounts are intentionally not inferred from balance deltas: an
-   * account-history provider may omit an earlier checkpoint, making that
-   * arithmetic plausible but wrong. The wallet decrypts the event's
-   * sender-auditor channel directly instead.
+   * Reveal payment amounts to the owner from their ciphertext history.
+   * Incoming amounts are decrypted directly from recipient ciphertexts.
+   * Outgoing escrow-funding events expose an owner-encrypted post-operation
+   * balance checkpoint, so their amount is the delta between consecutive
+   * openings. Those deltas are returned only when the complete replay opens
+   * both current on-chain balance commitments.
    */
-  discloseHistoryAmounts(events: ConfidentialEvent[]): Map<string, bigint> {
+  async discloseHistoryAmounts(events: ConfidentialEvent[]): Promise<Map<string, bigint>> {
     const amounts = new Map<string, bigint>();
-    for (const ev of events) {
+    const outgoing = new Map<string, bigint>();
+    const state = freshState(this.cfg.address);
+    let complete = false;
+
+    for (const ev of dedupeById(events)) {
       if (ev.type === "transfer" && ev.to === this.cfg.address) {
         amounts.set(ev.cursor, this.decryptIncoming(ev.rE, ev.vTilde, ev.sigma).vTx);
       } else if (ev.type === "spender_transfer" && ev.to === this.cfg.address) {
         amounts.set(ev.cursor, this.decryptIncoming(ev.rE, ev.vTilde, ev.sigmaA).vTx);
+      }
+
+      if (ev.type === "register" && ev.account === this.cfg.address) complete = true;
+      if (ev.type === "transfer" && ev.from === this.cfg.address && complete) {
+        const next = this.openSpendable(ev.bTilde, ev.sigma);
+        if (state.spendable.v >= next.v) outgoing.set(ev.cursor, state.spendable.v - next.v);
+      }
+      this.apply(state, ev);
+    }
+
+    // A balance delta is meaningful only when the complete ordered replay opens
+    // the commitments currently stored by the contract. Incoming ciphertexts
+    // remain independently decryptable, but do not publish inferred outgoing
+    // amounts from partial or duplicated history.
+    const onchain = await this.cfg.client.confidentialBalance(this.cfg.address).catch(() => null);
+    if (complete && onchain) {
+      const spendableOk = commit(state.spendable.v, state.spendable.r).equals(onchain.spendableBalance);
+      const receivingOk = commit(state.receiving.v, state.receiving.r).equals(onchain.receivingBalance);
+      if (spendableOk && receivingOk) {
+        for (const [cursor, amount] of outgoing) amounts.set(cursor, amount);
       }
     }
     return amounts;
@@ -160,6 +184,7 @@ export class StateEngine {
     const prior = await this.cfg.store.load(this.cfg.address);
     let state = prior ?? freshState(this.cfg.address);
     const recoveredIds = new Set<string>();
+    const recoveredEvents = new Set<string>();
 
     // Umbra is the durable source of the owner's encrypted history. Replay it
     // on every sync rather than treating it as a one-time cache migration: a
@@ -173,9 +198,10 @@ export class StateEngine {
         sinceLedger: this.cfg.fromLedger,
       });
       state = freshState(this.cfg.address);
-      for (const ev of recovery) {
+      for (const ev of dedupeById(recovery)) {
         this.apply(state, ev);
         recoveredIds.add(ev.cursor);
+        recoveredEvents.add(eventIdentity(ev));
       }
       state.cacheVersion = STATE_CACHE_VERSION;
     }
@@ -191,6 +217,7 @@ export class StateEngine {
         if (ev.type === "spender_transfer") {
           this.apply(state, ev);
           recoveredIds.add(ev.cursor);
+          recoveredEvents.add(eventIdentity(ev));
         }
       }
       state.cacheVersion = STATE_CACHE_VERSION;
@@ -203,7 +230,7 @@ export class StateEngine {
     );
 
     for (const ev of events) {
-      if (!recoveredIds.has(ev.cursor)) this.apply(state, ev);
+      if (!recoveredIds.has(ev.cursor) && !recoveredEvents.has(eventIdentity(ev))) this.apply(state, ev);
     }
     if (cursor) state.cursor = cursor;
     state.cacheVersion = STATE_CACHE_VERSION;
