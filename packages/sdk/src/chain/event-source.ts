@@ -74,6 +74,11 @@ export function eventIdentity(ev: ConfidentialEvent): string {
       const rE = pointCoords(ev.rE);
       return `${base}:${ev.from}:${ev.to}:${rE.x}:${rE.y}:${ev.sigma}:${ev.bTilde}:${ev.vTilde}`;
     }
+    case "set_spender":
+    case "revoke_spender": {
+      const rE = pointCoords(ev.rE);
+      return `${base}:${ev.account}:${ev.spender}:${rE.x}:${rE.y}:${ev.sigma}:${ev.bTilde}`;
+    }
     case "spender_transfer": {
       const rE = pointCoords(ev.rE);
       return `${base}:${ev.spender}:${ev.from}:${ev.to}:${rE.x}:${rE.y}:${ev.sigmaA}:${ev.vTilde}:${ev.aAudS}`;

@@ -15,6 +15,8 @@
  *   - merge(me)           → spendable += receiving; receiving = (0, 0).
  *   - withdraw(me, _)     → spendable = open(b_tilde, sigma)  [event encodes v_new].
  *   - transfer(me, _)     → spendable = open(b_tilde, sigma).
+ *   - set_spender(me, _)  → spendable = open(b_tilde, sigma).
+ *   - revoke_spender(me, _) → spendable = open(b_tilde, sigma).
  *
  * Why the spendable rule needs no history: withdraw/transfer emit
  * `b_tilde = v_new + Poseidon2(ENC_BAL, vk, sigma)`, so the owner reads the
@@ -85,14 +87,18 @@ export class StateEngine {
   /**
    * Reveal payment amounts to the owner from their ciphertext history.
    * Incoming amounts are decrypted directly from recipient ciphertexts.
-   * Outgoing escrow-funding events expose an owner-encrypted post-operation
-   * balance checkpoint, so their amount is the delta between consecutive
-   * openings. Those deltas are returned only when the complete replay opens
-   * both current on-chain balance commitments.
+   * A spender transfer is executed by the escrow contract, so the owner's
+   * wallet must never attempt D-sender decryption. In this deployment the
+   * spender circuit releases the complete allowance. The owner learns that
+   * allowance when set_spender moves it out of spendable: previous opening
+   * minus the event's owner-encrypted post-operation opening. The later
+   * spender_transfer is paired by spender and displays that owner-visible
+   * amount without claiming a sender disclosure proof.
    */
   async discloseHistoryAmounts(events: ConfidentialEvent[]): Promise<Map<string, bigint>> {
     const amounts = new Map<string, bigint>();
     const outgoing = new Map<string, bigint>();
+    const allowances = new Map<string, bigint>();
     const state = freshState(this.cfg.address);
     let complete = false;
 
@@ -107,6 +113,17 @@ export class StateEngine {
       if (ev.type === "transfer" && ev.from === this.cfg.address && complete) {
         const next = this.openSpendable(ev.bTilde, ev.sigma);
         if (state.spendable.v >= next.v) outgoing.set(ev.cursor, state.spendable.v - next.v);
+      } else if (ev.type === "set_spender" && ev.account === this.cfg.address && complete) {
+        const next = this.openSpendable(ev.bTilde, ev.sigma);
+        if (state.spendable.v >= next.v) allowances.set(ev.spender, state.spendable.v - next.v);
+      } else if (ev.type === "spender_transfer" && ev.from === this.cfg.address) {
+        const allowance = allowances.get(ev.spender);
+        if (allowance !== undefined) {
+          outgoing.set(ev.cursor, allowance);
+          allowances.delete(ev.spender);
+        }
+      } else if (ev.type === "revoke_spender" && ev.account === this.cfg.address) {
+        allowances.delete(ev.spender);
       }
       this.apply(state, ev);
     }
@@ -162,6 +179,10 @@ export class StateEngine {
             r: fpAdd(state.receiving.r, rTx),
           };
         }
+        break;
+      case "set_spender":
+      case "revoke_spender":
+        if (ev.account === me) state.spendable = this.openSpendable(ev.bTilde, ev.sigma);
         break;
       case "spender_transfer":
         if (ev.to === me) {

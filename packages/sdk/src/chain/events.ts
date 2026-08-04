@@ -26,6 +26,8 @@ export type ConfidentialEventType =
   | "merge"
   | "withdraw"
   | "transfer"
+  | "set_spender"
+  | "revoke_spender"
   | "spender_transfer"
   | ComplianceEventType;
 
@@ -100,6 +102,31 @@ export interface TransferEvent extends BaseEvent {
   bAudS: bigint;
 }
 
+/** Owner checkpoint emitted when funds are moved into an escrow allowance. */
+export interface SetSpenderEvent extends BaseEvent {
+  type: "set_spender";
+  account: string;
+  spender: string;
+  liveUntilLedger: number;
+  rE: Point;
+  sigma: bigint;
+  bTilde: bigint;
+  vAudS: bigint;
+  bAudS: bigint;
+}
+
+/** Owner checkpoint emitted when a remaining escrow allowance is reclaimed. */
+export interface RevokeSpenderEvent extends BaseEvent {
+  type: "revoke_spender";
+  account: string;
+  spender: string;
+  rE: Point;
+  sigma: bigint;
+  bTilde: bigint;
+  vAudS: bigint;
+  bAudS: bigint;
+}
+
 /** Delegated confidential transfer emitted when an escrow releases funds. */
 export interface SpenderTransferEvent extends BaseEvent {
   type: "spender_transfer";
@@ -128,6 +155,8 @@ export type ConfidentialEvent =
   | MergeEvent
   | WithdrawEvent
   | TransferEvent
+  | SetSpenderEvent
+  | RevokeSpenderEvent
   | SpenderTransferEvent
   | ComplianceEvent;
 
@@ -139,6 +168,8 @@ export const KNOWN: ReadonlySet<string> = new Set([
   "merge",
   "withdraw",
   "transfer",
+  "set_spender",
+  "revoke_spender",
   "spender_transfer",
   "frozen",
   "unfrozen",
@@ -206,6 +237,31 @@ export function buildConfidentialEvent(
         bTilde: data.field("b_tilde"),
         vAudR: data.field("v_aud_r"),
         rAudR: data.field("r_aud_r"),
+        vAudS: data.field("v_aud_s"),
+        bAudS: data.field("b_aud_s"),
+      };
+    case "set_spender":
+      return {
+        ...base,
+        type: "set_spender",
+        account: addr(1),
+        spender: addr(2),
+        liveUntilLedger: data.u32("live_until_ledger"),
+        rE: data.point("r_e"),
+        sigma: data.field("sigma"),
+        bTilde: data.field("b_tilde"),
+        vAudS: data.field("v_aud_s"),
+        bAudS: data.field("b_aud_s"),
+      };
+    case "revoke_spender":
+      return {
+        ...base,
+        type: "revoke_spender",
+        account: addr(1),
+        spender: addr(2),
+        rE: data.point("r_e"),
+        sigma: data.field("sigma"),
+        bTilde: data.field("b_tilde"),
         vAudS: data.field("v_aud_s"),
         bAudS: data.field("b_aud_s"),
       };
@@ -289,7 +345,7 @@ function rpcEventCoords(id: string): { opIndex: number; eventIndex: number } {
 /**
  * Fetch and parse all confidential-token events from `startLedger` (or resume
  * from `startCursor`), following pagination to the end. Unknown event types
- * (config setters, spender ops) are skipped.
+ * (such as admin configuration changes) are skipped.
  */
 export async function fetchEvents(
   client: ChainClient,

@@ -12,6 +12,7 @@ import { MemoryStore } from "../src/state/store.ts";
 const TOKEN = "CBF64DEOVQAXJFBSNGFEUT2AH4H7K5JBY3ZYJ5GVEINMNSDISWRG5N3F";
 const ACCOUNT = "GCRYH6M5YLTGZTCAALJPIJGQZY4Z6XFFUVTINCELQG4OGLADUBTAE3OU";
 const RECIPIENT = "GCV76XYE4MG555A76L3KHRCZ54FOOEYLKHJOGCXFSQDOULTKZOWSRJRB";
+const SPENDER = "CBJGL4LYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM3IK";
 const keys = deriveKeys(123456789n, addressToField(TOKEN));
 const sigma = 987654321n;
 const finalBalance = 200_0000000n;
@@ -42,20 +43,34 @@ const events = [
     account: ACCOUNT,
   },
   {
-    type: "transfer",
+    type: "set_spender",
     ledger: 13,
     txHash: "fund-escrow",
     cursor: "13-fund-escrow-0-0",
+    account: ACCOUNT,
+    spender: SPENDER,
+    liveUntilLedger: 100,
+    rE: H,
+    sigma,
+    bTilde: encryptBalance(finalBalance, keys.vk, sigma),
+    vAudS: 0n,
+    bAudS: 0n,
+  },
+  {
+    type: "spender_transfer",
+    ledger: 14,
+    txHash: "release-escrow",
+    cursor: "14-release-escrow-0-0",
+    spender: SPENDER,
     from: ACCOUNT,
     to: RECIPIENT,
     rE: H,
     vTilde: 0n,
-    sigma,
-    bTilde: encryptBalance(finalBalance, keys.vk, sigma),
+    sigmaA: 123n,
     vAudR: 0n,
     rAudR: 0n,
     vAudS: 0n,
-    bAudS: 0n,
+    aAudS: 0n,
   },
 ];
 
@@ -111,8 +126,9 @@ const checks = [
   ["migrates the cache to v3", state.cacheVersion === 3],
   ["preserves registration", state.registered],
   ["advances through the live RPC tail", state.syncedLedger === 20],
-  ["discloses outgoing amount from complete verified openings", disclosed.get(events[3].cursor) === 800_0000000n],
-  ["dedupes logical events before calculating outgoing amounts", duplicated.get(events[3].cursor) === 800_0000000n],
+  ["shows the escrow spend from its owner-visible allowance", disclosed.get(events[4].cursor) === 800_0000000n],
+  ["does not mislabel set_spender as a wallet-sent transfer", disclosed.get(events[3].cursor) === undefined],
+  ["dedupes logical events before calculating outgoing amounts", duplicated.get(events[4].cursor) === 800_0000000n],
   ["repairs a stale v3 cache on every Umbra sync", repaired.spendable.v === finalBalance && repaired.spendable.r === expectedR],
 ];
 

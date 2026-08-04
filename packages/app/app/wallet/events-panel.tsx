@@ -158,9 +158,11 @@ function EventRow({
         {direction === "sent" && !canDisclose && (
           <span
             className="text-xs text-neutral-600"
-            title="This transfer's R_e doesn't match the ephemeral scalar derived from this wallet's keys (it was sent with different keys or a non-deterministic r_e), so a D-sender proof can't be built."
+            title={ev.type === "spender_transfer"
+              ? "The escrow contract executed this transfer and generated R_e. The owner-visible amount is reconstructed from the allowance; only the spender can build a D-sender proof."
+              : "This transfer's R_e doesn't match the ephemeral scalar derived from this wallet's keys, so a D-sender proof can't be built."}
           >
-            third-party proof unavailable
+            {ev.type === "spender_transfer" ? "spender proof only" : "third-party proof unavailable"}
           </span>
         )}
       </div>
@@ -315,6 +317,20 @@ function summary(
       return (
         <Muted>receiving → spendable</Muted>
       );
+    case "set_spender":
+      return (
+        <>
+          <span className="font-black text-orange-600">escrow allowance created for</span> {who(ev.spender)}
+          <Muted>(owner balance checkpoint)</Muted>
+        </>
+      );
+    case "revoke_spender":
+      return (
+        <>
+          <span className="font-black text-green-700">escrow allowance reclaimed from</span> {who(ev.spender)}
+          <Muted>(owner balance checkpoint)</Muted>
+        </>
+      );
     case "withdraw":
       return (
         <>
@@ -347,7 +363,9 @@ function summary(
         </>
       ) : (
         <>
-          <span className="font-black text-orange-600">escrow released to</span> {who(ev.to)}
+          <span className="font-black text-orange-600">escrow released to</span> {who(ev.to)}{" "}
+          <span className="text-neutral-500">·</span> <TransferAmount amt={amt} assetCode={assetCode} />
+          <Muted>(reconstructed from allowance)</Muted>
         </>
       );
     }

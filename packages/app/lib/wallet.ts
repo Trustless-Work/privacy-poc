@@ -388,6 +388,8 @@ export class ConfidentialWallet {
     switch (ev.type) {
       case "register":
       case "merge":
+      case "set_spender":
+      case "revoke_spender":
         return ev.account === this.address;
       case "deposit":
       case "withdraw":
@@ -427,11 +429,12 @@ export class ConfidentialWallet {
    * Decrypt a confidential transfer's amount for local display, from whichever
    * side this wallet is on:
    *   - inbound (to === me):  ECDH with this wallet's viewing key.
-   *   - outbound (from === me): re-derive the ephemeral scalar (§15.2) and
+   *   - owner-originated outbound transfer (from === me): re-derive the ephemeral scalar (§15.2) and
    *     decrypt the sender-auditor amount channel with the public auditor key.
-   *     This also works for escrow funding normalized by Umbra as a transfer,
-   *     whose recipient ciphertext is not a normal recipient-viewing-key
-   *     channel.
+   * Delegated spender_transfer events are intentionally excluded: the escrow
+   * contract, not the owner wallet, generated their r_e. Their owner-visible
+   * amount is reconstructed from the set_spender allowance checkpoint by
+   * discloseHistoryAmounts().
    * Returns null when the amount can't be recovered here, such as an outbound
    * transfer not built with these keys (non-deterministic r_e). The amount
    * stays confidential on-chain regardless.

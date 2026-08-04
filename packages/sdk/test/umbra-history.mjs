@@ -17,7 +17,7 @@ function check(name, condition) {
   }
 }
 
-const event = parseUmbraEvent({
+const rawEvent = {
   event_id: "3916358-9-0",
   ledger: 3916358,
   tx_hash: TX,
@@ -33,7 +33,8 @@ const event = parseUmbraEvent({
     v_aud_s: "H6dj4T/AuKnRDt3dPCN2/UIoGtjRlTP3LIuJmblFbWo=",
     v_tilde: "Ef7DPw5ftUpDuxfi8o/dHMllNMsr9RkIoJ8YEF4YTuU=",
   },
-});
+};
+const event = parseUmbraEvent(rawEvent);
 
 console.log("Umbra normalized history decoder:");
 check("decodes a transfer", event?.type === "transfer");
@@ -42,7 +43,22 @@ check("normalizes the event id", event?.cursor === `3916358-${TX}-0-0`);
 check("decodes 32-byte fields", event?.sigma > 0n && event?.bTilde > 0n);
 const point = event?.type === "transfer" ? pointCoords(event.rE) : null;
 check("decodes the 64-byte ephemeral point", Boolean(point && point.x > 0n && point.y > 0n));
-check("ignores unknown event kinds", parseUmbraEvent({ ...event, kind: "set_spender" }) === null);
+const setSpender = parseUmbraEvent({
+  ...rawEvent,
+  event_id: "3916359-10-0",
+  kind: "set_spender",
+  addresses: [ACCOUNT, RECIPIENT],
+  payload: {
+    live_until_ledger: 4_000_000,
+    r_e: rawEvent.payload.r_e,
+    sigma: rawEvent.payload.sigma,
+    b_tilde: rawEvent.payload.b_tilde,
+    v_aud_s: rawEvent.payload.v_aud_s,
+    b_aud_s: rawEvent.payload.b_aud_s,
+  },
+});
+check("decodes owner set_spender checkpoints", setSpender?.type === "set_spender");
+check("maps set_spender owner and contract", setSpender?.account === ACCOUNT && setSpender?.spender === RECIPIENT);
 
 console.log(`\numbra-history: ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);
