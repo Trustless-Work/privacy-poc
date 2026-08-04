@@ -44,9 +44,9 @@ export function CastCard({ actor }: { actor: IrieActor }) {
 export function OrderCard({ compact = false }: { compact?: boolean }) {
   return (
     <section className="nb-card overflow-hidden">
-      <div className="flex items-center justify-between gap-3 border-b-[3px] border-neutral-950 bg-amber-300 px-4 py-3 text-neutral-950">
+      <div className="flex items-center justify-between gap-3 border-b-[3px] border-neutral-950 bg-amber-300 px-4 py-3">
         <p className="text-xs font-black uppercase tracking-wider">Irie Market order</p>
-        <span className="border-2 border-neutral-950 bg-white px-2 py-0.5 font-mono text-[10px] font-black">#{IRIE_ORDER.id}</span>
+        <span className="border-2 border-neutral-950 bg-white px-2 py-0.5 text-[10px] font-black">#{IRIE_ORDER.id}</span>
       </div>
       <div className={compact ? "p-4" : "p-5 sm:p-6"}>
         <div className="flex gap-4">
@@ -95,7 +95,7 @@ export function PrivacyPath() {
       <p className="nb-kicker">What stays private?</p>
       <h2 className="mt-4 text-xl font-black uppercase">The value moves. The amount stays hidden.</h2>
       <div className="mt-5 grid gap-2 text-center text-xs font-black sm:grid-cols-[1fr_auto_1fr_auto_1fr] sm:items-center">
-        <div className="border-2 border-neutral-950 bg-white p-3 text-neutral-950">Alberto&apos;s private funds</div>
+        <div className="border-2 border-neutral-950 bg-amber-500 p-3 text-neutral-950">Alberto&apos;s private funds</div>
         <span className="text-xl" aria-hidden>→</span>
         <div className="border-2 border-neutral-950 bg-orange-500 p-3 text-neutral-950">Confidential escrow</div>
         <span className="text-xl" aria-hidden>→</span>
