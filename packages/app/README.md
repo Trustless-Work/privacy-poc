@@ -162,7 +162,7 @@ The app sets:
 The app deploys to Cloudflare Workers through `@opennextjs/cloudflare`:
 
 ```bash
-pnpm --filter @ctd/app deploy
+pnpm --filter @ctd/app deploy:cf
 ```
 
 Configuration lives in `wrangler.jsonc` and `open-next.config.ts`.
