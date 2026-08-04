@@ -18,7 +18,7 @@ type CastMember = {
 };
 
 const CAST: Record<"Alberto" | "Ziggy" | "Buju B.", CastMember> = {
-  Alberto: { emoji: "👨🏽‍💻", label: "Customer", action: "Places and funds the private order" },
+  Alberto: { image: "/characters/alberto.png", label: "Customer", action: "Places and funds the private order" },
   Ziggy: { image: "/characters/ziggy.png", label: "Store operator", action: "Takes, initializes, and delivers the order" },
   "Buju B.": { image: "/characters/buju-b.png", label: "Boss · Payment receiver", action: "Receives the private payment" },
 };
@@ -35,7 +35,7 @@ export function CastCard({ actor }: { actor: IrieActor }) {
       <div>
         <p className="font-black uppercase leading-tight">{actor}</p>
         <p className="text-xs font-bold text-orange-600">{person.label}</p>
-        <p className="mt-1 text-xs text-neutral-500">{person.action}</p>
+        <p className="nb-copy-muted mt-1 text-xs">{person.action}</p>
       </div>
     </article>
   );
@@ -53,7 +53,7 @@ export function OrderCard({ compact = false }: { compact?: boolean }) {
           <span className="grid h-16 w-16 shrink-0 place-items-center border-[3px] border-neutral-950 bg-lime-500 text-3xl shadow-[3px_3px_0_#151515]" aria-hidden>🌿</span>
           <div>
             <h2 className="text-xl font-black uppercase leading-tight">{IRIE_ORDER.product}</h2>
-            <p className="mt-1 text-sm text-neutral-500">{IRIE_ORDER.description}</p>
+            <p className="nb-copy-muted mt-1 text-sm">{IRIE_ORDER.description}</p>
           </div>
         </div>
         <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 border-t-2 border-neutral-950 pt-4 text-xs sm:grid-cols-4">
@@ -68,7 +68,7 @@ export function OrderCard({ compact = false }: { compact?: boolean }) {
 }
 
 function OrderFact({ label, value }: { label: string; value: string }) {
-  return <div><dt className="font-bold uppercase text-neutral-500">{label}</dt><dd className="mt-1 font-black">{value}</dd></div>;
+  return <div><dt className="nb-copy-muted font-bold uppercase">{label}</dt><dd className="mt-1 font-black">{value}</dd></div>;
 }
 
 export function ActorContext({ actor, children }: { actor: IrieActor; children?: React.ReactNode }) {
@@ -101,7 +101,7 @@ export function PrivacyPath() {
         <span className="text-xl" aria-hidden>→</span>
         <div className="border-2 border-neutral-950 bg-lime-500 p-3 text-neutral-950">Buju B.&apos;s private balance</div>
       </div>
-      <p className="mt-4 text-sm leading-relaxed text-neutral-500">
+      <p className="nb-copy-muted mt-4 text-sm leading-relaxed">
         Stellar shows that the order was funded and released, but not the amount or either participant&apos;s confidential balance. Addresses and lifecycle events remain public.
       </p>
       <Link href="/escrow" className="mt-4 inline-block text-sm font-black text-orange-600 underline decoration-2 underline-offset-4">See the five-part journey →</Link>

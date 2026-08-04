@@ -135,7 +135,7 @@ export default function EscrowWalkthroughPage() {
           </span>
         </div>
         <h1 className="nb-title">A private order, from cart to cash.</h1>
-        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-neutral-400">
+        <p className="nb-copy-muted mt-3 max-w-3xl text-sm leading-relaxed">
           Alberto calls Ziggy to place an order. Ziggy initializes the escrow, Alberto funds it, Ziggy delivers the product, and Buju B. receives the payment.
         </p>
         </div>
@@ -148,7 +148,7 @@ export default function EscrowWalkthroughPage() {
             <span aria-hidden className="mt-0.5 text-amber-300">●</span>
             <div>
               <p className="text-sm font-black uppercase">Start order #IRIE-001</p>
-              <p className="mt-1 text-xs leading-relaxed text-neutral-400">
+              <p className="mt-1 text-xs leading-relaxed">
                 Meet the crew, prepare Buju B. and Alberto, then let Ziggy open the order escrow.
               </p>
             </div>
@@ -174,12 +174,12 @@ export default function EscrowWalkthroughPage() {
                 <span aria-hidden className="text-xl font-black transition-transform group-open:rotate-45">+</span>
               </summary>
               <div className="border-t-[3px] border-neutral-950 p-5 sm:p-6">
-                <p className="text-sm leading-relaxed text-neutral-300">{step.summary}</p>
+                <p className="nb-copy-muted text-sm leading-relaxed">{step.summary}</p>
                 <div className="mt-5 border-l-4 border-neutral-950 bg-amber-300/20 p-4">
                   <p className="text-xs font-black uppercase tracking-wider text-neutral-500">Do this</p>
                   <ol className="mt-3 space-y-3">
                     {step.mechanics.map((item, index) => (
-                      <li key={item} className="flex gap-3 text-sm leading-relaxed text-neutral-300">
+                      <li key={item} className="nb-copy-muted flex gap-3 text-sm leading-relaxed">
                         <span className="grid h-5 w-5 shrink-0 place-items-center border-2 border-neutral-950 bg-amber-300 text-[10px] font-black text-neutral-950">{index + 1}</span>
                         {item}
                       </li>
@@ -194,7 +194,7 @@ export default function EscrowWalkthroughPage() {
                 {escrow || step.id <= 2 ? (
                   <Link href={step.href} className="nb-action mt-5 block w-full px-4 py-3 text-center text-sm">{step.action}</Link>
                 ) : (
-                  <button type="button" disabled className="mt-5 w-full cursor-not-allowed rounded-lg bg-neutral-800 px-4 py-3 text-sm font-semibold text-neutral-500">{step.action} — initialize an escrow first</button>
+                  <button type="button" disabled className="nb-control mt-5 w-full cursor-not-allowed px-4 py-3 text-sm opacity-50">{step.action} — initialize an escrow first</button>
                 )}
               </div>
             </details>
@@ -204,14 +204,14 @@ export default function EscrowWalkthroughPage() {
         <aside className="space-y-4">
           <section className="nb-card p-4 text-xs">
             <p className="font-black uppercase">Technical details</p>
-            <dl className="mt-3 space-y-2 text-neutral-500">
+            <dl className="nb-copy-muted mt-3 space-y-2">
               <div className="flex items-center justify-between gap-3">
                 <dt>Token wrapper</dt>
-                <dd><Addr value={active.contracts.token} className="text-neutral-300" /></dd>
+                <dd><Addr value={active.contracts.token} /></dd>
               </div>
               <div className="flex items-center justify-between gap-3">
                 <dt>Escrow</dt>
-                <dd>{escrow ? <Addr value={escrow} className="text-neutral-300" /> : "Not deployed"}</dd>
+                <dd>{escrow ? <Addr value={escrow} /> : "Not deployed"}</dd>
               </div>
               <div className="flex items-center justify-between gap-3">
                 <dt>Asset</dt>
@@ -224,8 +224,8 @@ export default function EscrowWalkthroughPage() {
 
       <div className="mt-8"><PrivacyPath /></div>
 
-      <section className="nb-card mt-8 p-4 text-xs leading-relaxed text-neutral-500">
-        <strong className="font-medium text-neutral-300">Known v0 limitation:</strong> the payer can revoke or let the
+      <section className="nb-card nb-copy-muted mt-8 p-4 text-xs leading-relaxed">
+        <strong className="font-black">Known v0 limitation:</strong> the payer can revoke or let the
         confidential allowance expire before approval. Release then fails safely and the escrow remains Funded.
       </section>
     </main>
@@ -247,7 +247,7 @@ function VisibilityCard({
   return (
     <section className={`rounded-sm border-[3px] border-neutral-950 p-4 shadow-[4px_4px_0_#151515] ${styles}`}>
       <h3 className="text-xs font-semibold uppercase tracking-wider">{title}</h3>
-      <ul className="mt-3 space-y-2 text-xs text-neutral-400">
+      <ul className="mt-3 space-y-2 text-xs text-neutral-950/75">
         {items.map((item) => (
           <li key={item} className="flex gap-2">
             <span aria-hidden className="text-current">{tone === "public" ? "○" : "●"}</span>

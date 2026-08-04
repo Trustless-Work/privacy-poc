@@ -151,34 +151,34 @@ export default function ApproverPage() {
         <AccountSwitchReminder />
         <EscrowStateCard state={state} />
         {escrowAddress && !state && (
-          <section className="rounded-lg border border-amber-500/25 bg-amber-500/5 p-5">
-            <h2 className="font-semibold text-amber-200">Resume a deployed escrow</h2>
-            <p className="mt-2 text-xs leading-relaxed text-neutral-400">
+          <section className="nb-panel-guide">
+            <h2 className="nb-panel-title">Resume a deployed escrow</h2>
+            <p className="nb-copy-muted mt-2 text-xs leading-relaxed">
               This escrow was deployed but is not initialized yet. This can happen if the second
               Freighter request was cancelled or failed. Reconnect, keep the same Payer and Receiver,
               and finish initialization instead of deploying another contract.
             </p>
             {!controller ? (
-              <button onClick={connect} disabled={busy !== null} className="mt-4 rounded bg-amber-600 px-4 py-2 text-sm font-semibold hover:bg-amber-500 disabled:opacity-50">
+              <button onClick={connect} disabled={busy !== null} className="nb-secondary-action mt-4 px-4 py-2 text-sm disabled:opacity-50">
                 {busy === "connect" ? "Connecting…" : "Connect Approver to resume"}
               </button>
             ) : (
-              <button onClick={run("initialize", (c) => c.initialize(cleanPayer, cleanReceiver, setPhase))} disabled={busy !== null || !cleanPayer || !cleanReceiver || Boolean(roleError)} className="mt-4 rounded bg-amber-600 px-4 py-2 text-sm font-semibold hover:bg-amber-500 disabled:opacity-50">
+              <button onClick={run("initialize", (c) => c.initialize(cleanPayer, cleanReceiver, setPhase))} disabled={busy !== null || !cleanPayer || !cleanReceiver || Boolean(roleError)} className="nb-secondary-action mt-4 px-4 py-2 text-sm disabled:opacity-50">
                 {busy === "initialize" ? (phase === "proving" ? "Generating proof…" : "Finishing initialization…") : "Finish initialization"}
               </button>
             )}
           </section>
         )}
         {(showCreate || !state) && (
-          <section className="rounded-lg border border-violet-500/25 bg-violet-500/5 p-5">
-            <h2 className="font-semibold">Open a fresh order escrow</h2>
-            <p className="mt-2 text-xs text-neutral-400">The connected Freighter account becomes Ziggy, the store operator and technical approver. Each order gets a separate contract with fresh state.</p>
+          <section className="nb-panel-action">
+            <h2 className="nb-panel-title">Open a fresh order escrow</h2>
+            <p className="nb-copy-muted mt-2 text-xs">The connected Freighter account becomes Ziggy, the store operator and technical approver. Each order gets a separate contract with fresh state.</p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <AddressInput label="Alberto · Customer address" value={payer} onChange={setPayer} />
               <AddressInput label="Buju B. · Payment receiver address" value={receiver} onChange={setReceiver} />
             </div>
             {roleError && <ErrorBox className="mt-3" size="sm">{roleError}</ErrorBox>}
-            <button onClick={create} disabled={busy !== null || !active.contracts.factory || !cleanPayer || !cleanReceiver || Boolean(roleError)} className="mt-4 rounded bg-violet-600 px-4 py-2 text-sm font-semibold hover:bg-violet-500 disabled:opacity-50">
+            <button onClick={create} disabled={busy !== null || !active.contracts.factory || !cleanPayer || !cleanReceiver || Boolean(roleError)} className="nb-action mt-4 px-4 py-2 text-sm disabled:opacity-50">
               {busy === "create"
                 ? phase === "deploying" ? "Deploying escrow…" : phase === "proving" ? "Generating proof…" : "Initializing escrow…"
                 : "Open order escrow"}
@@ -186,25 +186,25 @@ export default function ApproverPage() {
           </section>
         )}
         {state && !showCreate && (
-          <section className="rounded-lg border border-neutral-800 bg-neutral-900/30 p-5">
-            <h2 className="font-semibold">Escrow instances</h2>
-            <p className="mt-2 text-xs text-neutral-400">You have {escrows.length || 1} escrow{(escrows.length || 1) === 1 ? "" : "s"} in this deployment. Use the Escrow selector in the top bar to switch instances.</p>
-            <button type="button" onClick={startCreate} disabled={busy !== null} className="mt-4 rounded border border-neutral-700 px-4 py-2 text-sm font-medium text-neutral-300 hover:border-violet-500 hover:text-white disabled:opacity-50">
+          <section className="nb-panel">
+            <h2 className="nb-panel-title">Escrow instances</h2>
+            <p className="nb-copy-muted mt-2 text-xs">You have {escrows.length || 1} escrow{(escrows.length || 1) === 1 ? "" : "s"} in this deployment. Use the Escrow selector in the top bar to switch instances.</p>
+            <button type="button" onClick={startCreate} disabled={busy !== null} className="nb-secondary-action mt-4 px-4 py-2 text-sm disabled:opacity-50">
               Create new escrow instance
             </button>
           </section>
         )}
         {state && !showCreate && !controller && (
-          <button onClick={connect} disabled={busy !== null} className="rounded bg-violet-600 px-4 py-2 font-medium hover:bg-violet-500 disabled:opacity-50">
+          <button onClick={connect} disabled={busy !== null} className="nb-action px-4 py-2 disabled:opacity-50">
             {busy === "connect" ? "Connecting…" : "Connect as Ziggy"}
           </button>
         )}
         {state && !showCreate && controller && (
-          <section className="rounded-lg border border-violet-500/25 bg-violet-500/5 p-5">
-            <h2 className="font-semibold">Delivery confirmation</h2>
-            <p className="mt-2 text-sm text-neutral-300">Ziggy has delivered the package. One confirmation releases the complete private payment to Buju B.; the amount and recipient cannot be edited here.</p>
-            {controller.approverAddress !== state.approver && <p className="mt-3 text-sm text-amber-300">The connected wallet is not the configured approver.</p>}
-            <button onClick={run("release", (c) => c.approveAndRelease(setPhase))} disabled={busy !== null || state.status !== "Funded" || controller.approverAddress !== state.approver} className="mt-4 rounded bg-violet-600 px-4 py-2 text-sm font-semibold hover:bg-violet-500 disabled:opacity-50">
+          <section className="nb-panel-success">
+            <h2 className="nb-panel-title">Delivery confirmation</h2>
+            <p className="nb-copy-muted mt-2 text-sm">Ziggy has delivered the package. One confirmation releases the complete private payment to Buju B.; the amount and recipient cannot be edited here.</p>
+            {controller.approverAddress !== state.approver && <p className="nb-alert mt-3 text-sm">The connected wallet is not the configured approver.</p>}
+            <button onClick={run("release", (c) => c.approveAndRelease(setPhase))} disabled={busy !== null || state.status !== "Funded" || controller.approverAddress !== state.approver} className="nb-action mt-4 px-4 py-2 text-sm disabled:opacity-50">
               {busy === "release" ? (phase === "proving" ? "Generating privacy proof…" : "Releasing payment…") : state.status === "Released" ? "Delivery confirmed · payment released" : "Confirm delivery & release"}
             </button>
           </section>
@@ -216,5 +216,5 @@ export default function ApproverPage() {
 }
 
 function AddressInput({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
-  return <label className="text-xs text-neutral-400">{label}<input value={value} onChange={(e) => onChange(e.target.value)} placeholder="G…" className="mt-1 w-full rounded border border-neutral-700 bg-neutral-950 px-3 py-2 font-mono text-sm text-neutral-100 outline-none focus:border-violet-500" /></label>;
+  return <label className="nb-field-label">{label}<input value={value} onChange={(e) => onChange(e.target.value)} placeholder="G…" className="nb-field font-mono text-sm" /></label>;
 }

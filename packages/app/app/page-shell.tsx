@@ -32,7 +32,7 @@ export function PageShell({
         )}
         <span className="nb-kicker mb-5">Private escrow · Testnet</span>
         <h1 className="nb-title">{title}</h1>
-        {subtitle && <p className="mt-4 max-w-2xl text-sm font-medium leading-relaxed text-neutral-400">{subtitle}</p>}
+        {subtitle && <p className="nb-copy-muted mt-4 max-w-2xl text-sm font-medium leading-relaxed">{subtitle}</p>}
         {badge && <ServingBadge className="mt-4" />}
       </header>
       {children}

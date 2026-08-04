@@ -31,21 +31,21 @@ export function BeginnerGuide({
 
       <div className="mt-5 grid gap-5 md:grid-cols-2">
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Before you click anything</h3>
+          <h3 className="nb-copy-muted text-xs font-black uppercase tracking-wider">Before you click anything</h3>
           <ul className="mt-3 space-y-2">
             {before.map((item) => (
-              <li key={item} className="flex gap-2 text-sm leading-relaxed text-neutral-300">
-                <span aria-hidden className="mt-0.5 font-black text-amber-300">□</span>
+              <li key={item} className="nb-copy-muted flex gap-2 text-sm leading-relaxed">
+                <span aria-hidden className="mt-0.5 font-black text-orange-600">□</span>
                 <span>{item}</span>
               </li>
             ))}
           </ul>
         </div>
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Do this now</h3>
+          <h3 className="nb-copy-muted text-xs font-black uppercase tracking-wider">Do this now</h3>
           <ol className="mt-3 space-y-2">
             {actions.map((item, index) => (
-              <li key={item} className="flex gap-3 text-sm leading-relaxed text-neutral-200">
+              <li key={item} className="nb-copy-muted flex gap-3 text-sm leading-relaxed">
                 <span className="grid h-5 w-5 shrink-0 place-items-center border-2 border-neutral-950 bg-orange-500 text-[11px] font-black text-neutral-950">
                   {index + 1}
                 </span>
@@ -61,7 +61,7 @@ export function BeginnerGuide({
       </div>
 
       {next && (
-        <p className="mt-4 text-xs leading-relaxed text-neutral-400">
+        <p className="nb-copy-muted mt-4 text-xs leading-relaxed">
           Next in the order: <Link href={next.href} className="font-black text-orange-600 hover:text-orange-500">{next.label} →</Link>
         </p>
       )}

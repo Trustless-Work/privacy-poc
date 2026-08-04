@@ -72,15 +72,15 @@ export default function ReceiverPage() {
         />
         <AccountSwitchReminder />
         <EscrowStateCard state={state} />
-        {!wallet ? <button onClick={connect} disabled={busy !== null || !escrowAddress} className="rounded bg-emerald-600 px-4 py-2 font-medium hover:bg-emerald-500 disabled:opacity-50">{busy === "connect" ? "Connecting…" : "Connect as Buju B."}</button> : (
-          <section className="rounded-lg border border-emerald-500/25 bg-emerald-500/5 p-5">
-            <h2 className="font-semibold">Buju B.&apos;s private payment</h2>
-            <dl className="mt-3 grid grid-cols-2 gap-3 text-sm"><div><dt className="text-neutral-500">Receiving</dt><dd className="mt-1 text-lg font-semibold">{view ? stroopsToXlm(view.receiving) : "—"} USDC</dd></div><div><dt className="text-neutral-500">Spendable</dt><dd className="mt-1 text-lg font-semibold">{view ? stroopsToXlm(view.spendable) : "—"} USDC</dd></div></dl>
-            {!isReceiver && <p className="mt-3 text-sm text-amber-300">This wallet is not the configured receiver.</p>}
-            {isReceiver && !view?.registered && <p className="mt-3 text-sm text-amber-300">Not ready: register this Receiver account on the Wallet page first.</p>}
-            {isReceiver && state?.status !== "Released" && <p className="mt-3 text-sm text-amber-300">Not ready: the Approver must release the escrow first.</p>}
-            {isReceiver && view?.registered && view.receiving === 0n && state?.status === "Released" && <p className="mt-3 text-sm text-amber-300">No receiving balance found yet. Sync the wallet or refresh this page, then check again.</p>}
-            <button onClick={merge} disabled={busy !== null || !isReceiver || !view?.registered || view.receiving === 0n} className="mt-4 rounded bg-emerald-600 px-4 py-2 text-sm font-semibold hover:bg-emerald-500 disabled:opacity-50">{busy === "merge" ? "Making payment spendable…" : "Make payment spendable"}</button>
+        {!wallet ? <button onClick={connect} disabled={busy !== null || !escrowAddress} className="nb-action px-4 py-2 disabled:opacity-50">{busy === "connect" ? "Connecting…" : "Connect as Buju B."}</button> : (
+          <section className="nb-panel-success">
+            <h2 className="nb-panel-title">Buju B.&apos;s private payment</h2>
+            <dl className="mt-4 grid grid-cols-2 gap-3 text-sm"><div className="nb-stat"><dt>Receiving</dt><dd className="mt-1 text-lg font-black">{view ? stroopsToXlm(view.receiving) : "—"} USDC</dd></div><div className="nb-stat"><dt>Spendable</dt><dd className="mt-1 text-lg font-black">{view ? stroopsToXlm(view.spendable) : "—"} USDC</dd></div></dl>
+            {!isReceiver && <p className="nb-alert mt-3 text-sm">This wallet is not the configured receiver.</p>}
+            {isReceiver && !view?.registered && <p className="nb-alert mt-3 text-sm">Not ready: register this Receiver account on the Wallet page first.</p>}
+            {isReceiver && state?.status !== "Released" && <p className="nb-alert mt-3 text-sm">Not ready: the Approver must release the escrow first.</p>}
+            {isReceiver && view?.registered && view.receiving === 0n && state?.status === "Released" && <p className="nb-alert mt-3 text-sm">No receiving balance found yet. Sync the wallet or refresh this page, then check again.</p>}
+            <button onClick={merge} disabled={busy !== null || !isReceiver || !view?.registered || view.receiving === 0n} className="nb-action mt-4 px-4 py-2 text-sm disabled:opacity-50">{busy === "merge" ? "Making payment spendable…" : "Make payment spendable"}</button>
           </section>
         )}
         <LogPanel logs={logs} />

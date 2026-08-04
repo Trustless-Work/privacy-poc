@@ -3,10 +3,10 @@ import { Addr } from "../addr";
 
 export function EscrowStateCard({ state }: { state: OnChainEscrow | null }) {
   return (
-    <section className="rounded-lg border border-neutral-800 bg-neutral-900/30 p-4">
+    <section className="nb-panel">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold">Order escrow state</h2>
-        <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-300">
+        <h2 className="nb-panel-title text-sm">Order escrow state</h2>
+        <span className="nb-status">
           {state?.status ?? "Not initialized"}
         </span>
       </div>
@@ -17,7 +17,7 @@ export function EscrowStateCard({ state }: { state: OnChainEscrow | null }) {
           <Role label="Ziggy · Store operator / Approver" address={state.approver} />
         </dl>
       ) : (
-        <p className="mt-3 text-xs leading-relaxed text-neutral-400">
+        <p className="nb-copy-muted mt-3 text-xs leading-relaxed">
           The contract is deployed but has no roles yet. The approver initializes it once.
         </p>
       )}
@@ -27,9 +27,9 @@ export function EscrowStateCard({ state }: { state: OnChainEscrow | null }) {
 
 function Role({ label, address }: { label: string; address: string }) {
   return (
-    <div>
-      <dt className="text-neutral-500">{label}</dt>
-      <dd className="mt-1"><Addr value={address} className="text-neutral-200" /></dd>
+    <div className="nb-stat">
+      <dt>{label}</dt>
+      <dd className="mt-2"><Addr value={address} /></dd>
     </div>
   );
 }

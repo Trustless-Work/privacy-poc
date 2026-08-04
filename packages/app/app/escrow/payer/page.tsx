@@ -89,32 +89,32 @@ export default function PayerPage() {
         <AccountSwitchReminder />
         <EscrowStateCard state={state} />
         {!wallet ? (
-          <button onClick={connect} disabled={busy !== null || !escrowAddress} className="rounded bg-sky-600 px-4 py-2 font-medium hover:bg-sky-500 disabled:opacity-50">
+          <button onClick={connect} disabled={busy !== null || !escrowAddress} className="nb-action px-4 py-2 disabled:opacity-50">
             {busy === "connect" ? "Connecting…" : "Connect as Alberto"}
           </button>
         ) : (
-          <section className="rounded-lg border border-sky-500/25 bg-sky-500/5 p-5">
-            <h2 className="font-semibold">Order payment</h2>
-            <p className="mt-2 text-xs text-neutral-400">
+          <section className="nb-panel-action">
+            <h2 className="nb-panel-title">Order payment</h2>
+            <p className="nb-copy-muted mt-2 text-xs">
               Alberto connected: {wallet.address}. Private spendable: {view ? stroopsToXlm(view.spendable) : "—"} USDC.
             </p>
-            {!view?.registered && <p className="mt-3 text-sm text-amber-300">Not ready: open Wallet, register this Payer account, deposit USDC, then merge it.</p>}
-            {view?.registered && view.spendable === 0n && <p className="mt-3 text-sm text-amber-300">Not ready: Spendable is 0 USDC. Deposit USDC in Wallet and merge the Receiving balance first.</p>}
-            {state && wallet.address !== state.payer && <p className="mt-3 text-sm text-amber-300">This wallet is not the configured payer.</p>}
-            {state?.status !== "Initialized" && <p className="mt-3 text-sm text-amber-300">Not ready: escrow status must be Initialized.</p>}
+            {!view?.registered && <p className="nb-alert mt-3 text-sm">Not ready: open Wallet, register this Payer account, deposit USDC, then merge it.</p>}
+            {view?.registered && view.spendable === 0n && <p className="nb-alert mt-3 text-sm">Not ready: Spendable is 0 USDC. Deposit USDC in Wallet and merge the Receiving balance first.</p>}
+            {state && wallet.address !== state.payer && <p className="nb-alert mt-3 text-sm">This wallet is not the configured payer.</p>}
+            {state?.status !== "Initialized" && <p className="nb-alert mt-3 text-sm">Not ready: escrow status must be Initialized.</p>}
             <div className="mt-4 flex flex-wrap items-end gap-3">
-              <label className="text-xs text-neutral-400">Private order amount
-                <span className="mt-1 flex rounded border border-neutral-700 bg-neutral-950">
-                  <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" className="w-32 bg-transparent px-3 py-2 text-sm outline-none" />
-                  <span className="border-l border-neutral-700 px-3 py-2">USDC</span>
+              <label className="nb-field-label">Private order amount
+                <span className="mt-1 flex items-center gap-2">
+                  <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" className="nb-field mt-0 w-32 text-sm" />
+                  <span className="nb-chip px-3 py-2">USDC</span>
                 </span>
               </label>
-              <button onClick={fund} disabled={!ready || busy !== null} className="rounded bg-sky-600 px-4 py-2 text-sm font-semibold hover:bg-sky-500 disabled:opacity-50">
+              <button onClick={fund} disabled={!ready || busy !== null} className="nb-action px-4 py-2 text-sm disabled:opacity-50">
                 {busy === "fund" ? (phase === "proving" ? "Generating privacy proof…" : "Locking payment…") : "Lock order payment"}
               </button>
             </div>
-            <p className="mt-3 text-xs text-neutral-500">The allowance expires after roughly seven days. The amount is known to participants but never appears in the escrow call or storage.</p>
-            <Link href="/wallet" className="mt-4 inline-block text-xs font-medium text-indigo-300 hover:text-indigo-200">Need a Spendable balance? Open Wallet preparation →</Link>
+            <p className="nb-copy-muted mt-3 text-xs">The allowance expires after roughly seven days. The amount is known to participants but never appears in the escrow call or storage.</p>
+            <Link href="/wallet" className="mt-4 inline-block text-xs font-black text-orange-600 underline decoration-2 underline-offset-4 hover:text-orange-500">Need a Spendable balance? Open Wallet preparation →</Link>
           </section>
         )}
         <LogPanel logs={logs} />
