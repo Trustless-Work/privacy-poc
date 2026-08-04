@@ -15,27 +15,59 @@ type CastMember = {
   image?: string;
   label: string;
   action: string;
+  pixelate?: boolean;
 };
 
 const CAST: Record<"Alberto" | "Ziggy" | "Buju B.", CastMember> = {
-  Alberto: { image: "/characters/alberto.png", label: "Customer", action: "Places and funds the private order" },
-  Ziggy: { image: "/characters/ziggy.png", label: "Store operator", action: "Takes, initializes, and delivers the order" },
-  "Buju B.": { image: "/characters/buju-b.png", label: "Boss · Payment receiver", action: "Receives the private payment" },
+  Alberto: {
+    image: "/characters/alberto.png",
+    label: "Customer",
+    action: "Places and funds the private order",
+    pixelate: true,
+  },
+  Ziggy: {
+    image: "/characters/ziggy.png",
+    label: "Store operator",
+    action: "Takes, initializes, and delivers the order",
+  },
+  "Buju B.": {
+    image: "/characters/buju-b.png",
+    label: "Boss · Payment receiver",
+    action: "Receives the private payment",
+  },
 };
 
 export type GreenRoadActor = keyof typeof CAST;
 
+type PortraitVariant = "card" | "context";
+
+function CharacterPortrait({ person, variant }: { person: CastMember; variant: PortraitVariant }) {
+  const frameClass = variant === "card"
+    ? "mx-auto aspect-square w-full max-w-44 border-[3px] bg-amber-300 shadow-[4px_4px_0_#151515]"
+    : "h-28 w-28 border-[3px] bg-white shadow-[3px_3px_0_#151515] sm:h-32 sm:w-32";
+  const imageClass = person.pixelate
+    ? "h-1/4 w-1/4 scale-[4] object-cover contrast-[1.08] saturate-[.9] [image-rendering:pixelated]"
+    : "h-full w-full object-contain [image-rendering:pixelated]";
+
+  return (
+    <span
+      className={`grid shrink-0 place-items-center overflow-hidden border-neutral-950 text-4xl ${frameClass}`}
+      aria-hidden
+    >
+      {person.image ? <img src={person.image} alt="" className={imageClass} /> : person.emoji}
+    </span>
+  );
+}
+
 export function CastCard({ actor }: { actor: GreenRoadActor }) {
   const person = CAST[actor];
   return (
-    <article className="nb-card flex items-center gap-3 p-4">
-      <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden border-2 border-neutral-950 bg-amber-300 text-2xl shadow-[2px_2px_0_#151515]" aria-hidden>
-        {person.image ? <img src={person.image} alt="" className="h-full w-full object-contain [image-rendering:pixelated]" /> : person.emoji}
-      </span>
-      <div>
-        <p className="font-black uppercase leading-tight">{actor}</p>
-        <p className="text-xs font-bold text-orange-600">{person.label}</p>
-        <p className="nb-copy-muted mt-1 text-xs">{person.action}</p>
+    <article className="nb-card flex flex-col gap-4 p-5">
+      <CharacterPortrait person={person} variant="card" />
+      <div className="w-full border-t-2 border-neutral-950 pt-4">
+        <p className="text-lg font-black uppercase leading-tight">{actor}</p>
+        <p className="mt-1 text-xs font-bold text-orange-600">{person.label}</p>
+        <p className="nb-copy-muted mt-2 text-xs leading-relaxed">{person.action}</p>
       </div>
     </article>
   );
@@ -74,17 +106,15 @@ function OrderFact({ label, value }: { label: string; value: string }) {
 export function ActorContext({ actor, children }: { actor: GreenRoadActor; children?: React.ReactNode }) {
   const person = CAST[actor];
   return (
-    <section className="nb-card-guide mb-6 flex flex-col justify-between gap-4 p-4 sm:flex-row sm:items-center">
-      <div className="flex items-center gap-3">
-        <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden border-2 border-neutral-950 bg-white text-3xl" aria-hidden>
-          {person.image ? <img src={person.image} alt="" className="h-full w-full object-contain [image-rendering:pixelated]" /> : person.emoji}
-        </span>
+    <section className="nb-card-guide mb-6 flex flex-col justify-between gap-5 p-5 sm:flex-row sm:items-center sm:p-6">
+      <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-5">
+        <CharacterPortrait person={person} variant="context" />
         <div>
           <p className="text-[10px] font-black uppercase tracking-wider">You are acting as</p>
-          <p className="text-lg font-black uppercase">{actor} · {person.label}</p>
+          <p className="mt-1 text-xl font-black uppercase sm:text-2xl">{actor} · {person.label}</p>
         </div>
       </div>
-      <div className="text-xs font-bold sm:max-w-xs sm:text-right">{children ?? person.action}</div>
+      <div className="text-xs font-bold leading-relaxed sm:max-w-xs sm:text-right">{children ?? person.action}</div>
     </section>
   );
 }
