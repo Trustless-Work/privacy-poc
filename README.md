@@ -2,6 +2,12 @@
 
 A Stellar testnet proof of concept for milestone escrow using Confidential Tokens with USDC as the underlying SEP-41 asset.
 
+## Hackathon demo: Irie Market
+
+The application presents the protocol as a privacy-preserving marketplace order. Alberto buys a 25 USDC **Irie Oregano Kit** from Bruno. Ziggy, the delivery partner, opens the escrow and confirms the successful delivery. The escrow then releases Bruno's payment without publishing the order amount or the participants' confidential balances on-chain.
+
+The primary UI tells this story in five understandable chapters while retaining the seven exact setup and contract operations underneath it. Technical wallets, auditor, disclosure, and deployment tools remain available from the role menu.
+
 > [!WARNING]
 > This repository evaluates developer-preview cryptography. The Confidential Token circuits and UltraHonk verifier are not production-ready or approved for mainnet. Do not use real value.
 
@@ -16,7 +22,7 @@ The PoC now demonstrates the complete confidential escrow lifecycle:
 - The Approver releases the complete allowance atomically.
 - The Receiver reconstructs the release from the token's `spender_transfer` event, merges it into private spendable funds, and can withdraw to public USDC.
 - An Auditor can decrypt supported confidential activity with the configured auditor key.
-- A neo-brutalist UI and guided seven-step walkthrough are available at `/escrow`.
+- A neo-brutalist, scenario-first landing page and guided Irie Market walkthrough are available at `/` and `/escrow`.
 
 The core research question has been answered positively: an escrow contract can act as an authorized confidential spender and atomically release the complete private allowance to a fixed Receiver without revealing the amount on-chain.
 
@@ -112,9 +118,9 @@ The factory also lacks an `escrow_deployed` event. Until that is added, escrow d
 
 The working iteration was validated with SDK and app TypeScript checks, a production Next.js build, the fast cryptography/escrow suite, and dedicated release-recovery regression coverage. The release recovery verifies exact commitment reconstruction and prevents double-crediting during historical backfill.
 
-## Next iteration
+## UI/UX roadmap
 
-The next iteration focuses on UI and user experience: stronger active-wallet and active-escrow context, clearer private balance explanations, transaction/proof progress, state-aware journey guidance, human-readable escrow labels, import/discovery, and actionable diagnostics. See the [UI/UX plan](docs/ui-ux-next-iteration.md).
+The first scenario and role-clarity slice is implemented. Remaining UX priorities include stronger active-wallet and active-escrow context, clearer private balance explanations, transaction/proof progress, state-derived journey status, human-readable escrow labels, import/discovery, and actionable diagnostics. See the [UI/UX plan](docs/ui-ux-next-iteration.md).
 
 ## References
 

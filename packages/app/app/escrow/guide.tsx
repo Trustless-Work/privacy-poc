@@ -25,7 +25,7 @@ export function BeginnerGuide({
           <h2 className="mt-3 text-xl font-black uppercase">{title}</h2>
         </div>
         <span className="nb-chip px-3 py-1 text-xs">
-          Use: {account}
+          Character: {account}
         </span>
       </div>
 
@@ -62,7 +62,7 @@ export function BeginnerGuide({
 
       {next && (
         <p className="mt-4 text-xs leading-relaxed text-neutral-400">
-          After this succeeds: <Link href={next.href} className="font-medium text-indigo-300 hover:text-indigo-200">{next.label} →</Link>
+          Next in the order: <Link href={next.href} className="font-black text-orange-600 hover:text-orange-500">{next.label} →</Link>
         </p>
       )}
     </section>
@@ -72,8 +72,8 @@ export function BeginnerGuide({
 export function AccountSwitchReminder() {
   return (
     <div className="nb-card-guide p-4 text-sm leading-relaxed">
-      <strong className="font-black uppercase">Changed accounts in Freighter?</strong>{" "}
-      Refresh this page, connect again, and verify the displayed <code className="text-xs text-neutral-100">G…</code> address before submitting.
+      <strong className="font-black uppercase">Changing characters?</strong>{" "}
+      Switch accounts in Freighter, refresh this page, reconnect, and verify the displayed <code className="text-xs">G…</code> address before submitting.
     </div>
   );
 }

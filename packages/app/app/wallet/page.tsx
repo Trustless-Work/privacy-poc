@@ -12,6 +12,7 @@ import { ErrorBox } from "../error-box";
 import { LogPanel } from "../log-panel";
 import { Addr } from "../addr";
 import { AccountSwitchReminder } from "../escrow/guide";
+import { OrderCard } from "../escrow/irie-order";
 
 type ActionTab = "deposit" | "withdraw" | "transfer" | "merge";
 
@@ -149,21 +150,22 @@ export default function Page() {
 
   return (
     <PageShell
-      title="Prepare a Payer or Receiver wallet"
-      subtitle="Use this page before the escrow flow. Connect and prepare one Freighter Testnet account at a time."
+      title="Prepare the order crew"
+      subtitle="Before the purchase, give Bruno a private receiving account and prepare Alberto's confidential USDC. Connect one character at a time."
     >
+      <div className="mb-6"><OrderCard compact /></div>
       <section className="mb-6 rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-5">
-        <p className="text-xs font-semibold uppercase tracking-wider text-indigo-300">Steps 2–3 of 7</p>
-        <h2 className="mt-1 text-lg font-semibold">Choose the account you are preparing</h2>
+        <p className="text-xs font-semibold uppercase tracking-wider text-indigo-300">Order setup · actions 1–2 of 5</p>
+        <h2 className="mt-1 text-lg font-semibold">Which character are you preparing?</h2>
         <p className="mt-2 text-sm leading-relaxed text-neutral-400">
-          Receiver preparation stops after registration. Payer preparation continues through Deposit and Merge.
+          Bruno only needs registration to receive. Alberto registers, deposits, and merges enough private USDC for the order.
         </p>
         <div className="mt-5 grid gap-4 md:grid-cols-2">
           <WalletRoleCard
-            role="Receiver"
-            step="Step 2"
+            role="Bruno · Seller"
+            step="Prepare to receive"
             items={[
-              "Select Escrow Receiver in Freighter, then refresh this page.",
+              "Select Bruno's account in Freighter, then refresh this page.",
               "Connect Freighter and verify the displayed G… address.",
               "Click Register and approve the Testnet transaction.",
               "Stop when Registered is shown. The Receiver needs no deposit.",
@@ -171,12 +173,12 @@ export default function Page() {
             success="Registered · Spendable 0 · Receiving 0"
           />
           <WalletRoleCard
-            role="Payer"
-            step="Step 3"
+            role="Alberto · Buyer"
+            step="Prepare to buy"
             items={[
-              "Select Escrow Payer in Freighter, then refresh this page.",
+              "Select Alberto's account in Freighter, then refresh this page.",
               "Connect, verify the G… address, and click Register.",
-              "Open Deposit, enter a small amount such as 10 USDC, and approve.",
+              "Open Deposit, enter at least 25 USDC, and approve.",
               "Open Merge and merge the entire Receiving balance.",
             ]}
             success="Registered · Receiving 0 · Spendable greater than 0"
@@ -354,12 +356,12 @@ function WalletRoleCard({
   items,
   success,
 }: {
-  role: "Payer" | "Receiver";
+  role: "Alberto · Buyer" | "Bruno · Seller";
   step: string;
   items: string[];
   success: string;
 }) {
-  const tone = role === "Payer"
+  const tone = role.startsWith("Alberto")
     ? "border-sky-500/25 bg-sky-500/5 text-sky-200"
     : "border-emerald-500/25 bg-emerald-500/5 text-emerald-200";
   return (

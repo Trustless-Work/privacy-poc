@@ -4,9 +4,9 @@ import { PersonaNav } from "./nav";
 import { ActiveDeploymentProvider } from "@/lib/active-deployment";
 
 export const metadata: Metadata = {
-  title: "Trustless Work — Private Escrow PoC",
+  title: "Irie Market — Private Commerce on Stellar",
   description:
-    "One-milestone confidential USDC escrow on Stellar with on-chain UltraHonk proofs, selective disclosure, and auditability (testnet).",
+    "A privacy-preserving marketplace demo powered by confidential USDC escrow on Stellar Testnet.",
 };
 
 // The high-contrast light palette is the canonical neo-brutalist presentation.

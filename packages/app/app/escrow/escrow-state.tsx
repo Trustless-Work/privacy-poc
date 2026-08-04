@@ -5,16 +5,16 @@ export function EscrowStateCard({ state }: { state: OnChainEscrow | null }) {
   return (
     <section className="rounded-lg border border-neutral-800 bg-neutral-900/30 p-4">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold">Shared escrow state</h2>
+        <h2 className="text-sm font-semibold">Order escrow state</h2>
         <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-300">
           {state?.status ?? "Not initialized"}
         </span>
       </div>
       {state ? (
         <dl className="mt-4 grid gap-3 text-xs sm:grid-cols-3">
-          <Role label="Payer" address={state.payer} />
-          <Role label="Receiver" address={state.receiver} />
-          <Role label="Approver" address={state.approver} />
+          <Role label="Alberto · Buyer" address={state.payer} />
+          <Role label="Bruno · Seller" address={state.receiver} />
+          <Role label="Ziggy · Delivery" address={state.approver} />
         </dl>
       ) : (
         <p className="mt-3 text-xs leading-relaxed text-neutral-400">

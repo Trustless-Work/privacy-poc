@@ -19,11 +19,11 @@ import { hasAdminDashboard } from "@/lib/deployment";
 import { truncateMiddle } from "@/lib/format";
 
 export const PERSONAS = [
-  { href: "/escrow", label: "Escrow walkthrough", text: "text-emerald-300" },
-  { href: "/escrow/payer", label: "Escrow payer", text: "text-sky-300" },
-  { href: "/escrow/approver", label: "Escrow approver", text: "text-violet-300" },
-  { href: "/escrow/receiver", label: "Escrow receiver", text: "text-emerald-300" },
-  { href: "/wallet", label: "Account holder", text: "text-indigo-300" },
+  { href: "/escrow", label: "Guided order", text: "text-emerald-300" },
+  { href: "/escrow/payer", label: "Alberto · Buyer", text: "text-orange-500" },
+  { href: "/escrow/approver", label: "Ziggy · Delivery", text: "text-amber-400" },
+  { href: "/escrow/receiver", label: "Bruno · Seller", text: "text-emerald-500" },
+  { href: "/wallet", label: "Prepare private funds", text: "text-indigo-300" },
   { href: "/verify", label: "Disclosure receiver", text: "text-cyan-300" },
   { href: "/auditor", label: "Auditor", text: "text-amber-300" },
 ] as const;
@@ -259,7 +259,7 @@ export function PersonaNav() {
       <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-3 gap-y-3 px-5 py-3">
         <Link href="/" className="mr-1 flex items-center gap-2">
           <ShieldMark />
-          <span className="hidden text-sm font-black uppercase tracking-tight sm:inline">Trustless Work <span className="text-orange-500">/ Private</span></span>
+          <span className="hidden text-sm font-black uppercase tracking-tight sm:inline">Irie Market <span className="text-orange-500">/ Private</span></span>
         </Link>
         <span className="flex-1" />
         <DeploymentToggle />

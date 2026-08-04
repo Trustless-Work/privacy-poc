@@ -1,115 +1,52 @@
 "use client";
 
-/**
- * Landing page: a persona chooser. Pick a role and land on that persona's page.
- * The same links live in the top bar of every page (app/nav.tsx). The roster
- * reflects the active deployment — the Token Admin role appears for any
- * deployment created in advanced mode (compliant or vanilla — its dashboard is
- * also the redeploy portal), but not for the built-in default. The deployment
- * axis itself (Default ↔ Advanced, and deploying your own) is managed from the
- * top bar, not here.
- */
-
 import Link from "next/link";
-import { useActiveDeployment } from "@/lib/active-deployment";
-import { hasAdminDashboard } from "@/lib/deployment";
 import { ServingBadge } from "./serving-badge";
-
-const PERSONA_CARDS = [
-  {
-    href: "/escrow",
-    title: "Private milestone escrow",
-    tagline: "guided PoC flow",
-    accent: "border-emerald-500/40 hover:border-emerald-400/70",
-    cta: "Walk through the escrow →",
-    ctaCls: "text-emerald-300",
-    blurb:
-      "Follow one confidential USDC milestone from wallet preparation and funding through approval, " +
-      "full release, receipt, and disclosure. Every step explains what is public, what stays private, " +
-      "and what the contracts and zero-knowledge proofs enforce.",
-  },
-  {
-    href: "/wallet",
-    title: "Account holder",
-    tagline: "token holder",
-    accent: "border-indigo-500/40 hover:border-indigo-400/70",
-    cta: "Open wallet →",
-    ctaCls: "text-indigo-300",
-    blurb:
-      "Hold and move balances without exposing amounts on-chain. Connect a wallet to deposit, " +
-      "transfer, and withdraw. Each operation is a zero-knowledge proof generated client-side, " +
-      "and on-chain your balance is only a curve commitment.",
-  },
-  {
-    href: "/verify",
-    title: "Disclosure receiver",
-    tagline: "verifying counterparty",
-    accent: "border-cyan-500/40 hover:border-cyan-400/70",
-    cta: "Verify a disclosure →",
-    ctaCls: "text-cyan-300",
-    blurb:
-      "A compliance desk, tax authority, or counterparty that needs proof of a single payment. " +
-      "Issue a one-time request, receive a proof in return, and learn exactly one amount about " +
-      "exactly one transfer. No wallet required.",
-  },
-  {
-    href: "/auditor",
-    title: "Auditor",
-    tagline: "designated auditor",
-    accent: "border-amber-500/40 hover:border-amber-400/70",
-    cta: "Open auditor console →",
-    ctaCls: "text-amber-300",
-    blurb:
-      "Every account in this deployment registers under the auditor key, so each transfer and " +
-      "withdrawal carries ciphertexts only the auditor can open.",
-  },
-] as const;
-
-const ADMIN_CARD = {
-  href: "/admin",
-  title: "Token admin",
-  tagline: "deployment owner",
-  accent: "border-rose-500/40 hover:border-rose-400/70",
-  cta: "Open admin dashboard →",
-  ctaCls: "text-rose-300",
-  blurb:
-    "The owner of a compliant token: see every registered account, freeze/unfreeze accounts, and " +
-    "(for allowlist/blocklist configs) manage who is permitted to transact. For a vanilla " +
-    "configuration deployed in advanced mode, this is instead where you redeploy.",
-} as const;
+import { CastCard, OrderCard, PrivacyPath } from "./escrow/irie-order";
 
 export default function LandingPage() {
-  const { active } = useActiveDeployment();
-  const cards = hasAdminDashboard(active) ? [ADMIN_CARD, ...PERSONA_CARDS] : PERSONA_CARDS;
-
   return (
-    <main className="mx-auto max-w-3xl px-5 py-12">
-      <header className="mb-10">
-        <h1 className="text-3xl font-semibold tracking-tight">Confidential transfers</h1>
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-neutral-400">
-          Balances are Grumpkin Pedersen commitments and every transfer is verified on-chain by an
-          UltraHonk proof. Amounts stay private, disclosed only to the parties entitled to see
-          them. Select a role to begin.
-        </p>
-        <ServingBadge className="mt-4" />
+    <main className="mx-auto max-w-5xl px-5 py-10 sm:py-16">
+      <header className="grid items-center gap-8 lg:grid-cols-[1.08fr_.92fr]">
+        <div>
+          <div className="flex flex-wrap items-center gap-3"><span className="nb-kicker">Irie Market · Stellar Testnet</span><ServingBadge /></div>
+          <h1 className="mt-6 max-w-[12ch] text-5xl font-black uppercase leading-[.9] tracking-[-.065em] sm:text-7xl">Buy privately. Deliver fairly.</h1>
+          <p className="mt-6 max-w-xl text-base font-medium leading-relaxed text-neutral-500">
+            Follow Alberto as he buys an Irie Oregano Kit from Bruno. Ziggy confirms delivery, and confidential escrow releases the payment without revealing its amount on-chain.
+          </p>
+          <div className="mt-7 flex flex-wrap gap-3">
+            <Link href="/escrow" className="nb-action px-6 py-3 text-sm uppercase">Start the guided demo →</Link>
+            <a href="#privacy" className="nb-control px-6 py-3 text-sm uppercase">How privacy works</a>
+          </div>
+        </div>
+        <OrderCard />
       </header>
 
-      <div className="space-y-4">
-        {cards.map((p) => (
-          <Link
-            key={p.href}
-            href={p.href}
-            className={`block rounded-lg border bg-neutral-900/40 p-5 transition-colors ${p.accent}`}
-          >
-            <div className="flex items-baseline gap-2">
-              <h2 className="text-lg font-medium">{p.title}</h2>
-              <span className="text-sm text-neutral-500">— {p.tagline}</span>
-            </div>
-            <p className="mt-2 text-sm leading-relaxed text-neutral-400">{p.blurb}</p>
-            <span className={`mt-3 inline-block text-sm font-medium ${p.ctaCls}`}>{p.cta}</span>
-          </Link>
-        ))}
-      </div>
+      <section className="mt-14">
+        <p className="nb-kicker">Meet the order crew</p>
+        <div className="mt-5 grid gap-4 md:grid-cols-3"><CastCard actor="Alberto" /><CastCard actor="Bruno" /><CastCard actor="Ziggy" /></div>
+      </section>
+
+      <section className="mt-14 grid gap-6 lg:grid-cols-[1fr_1.05fr]">
+        <div className="nb-card-guide p-6">
+          <p className="text-xs font-black uppercase tracking-wider">The happy path</p>
+          <ol className="mt-5 space-y-4">
+            {[
+              "Alberto prepares confidential USDC.",
+              "Ziggy opens an escrow for the order.",
+              "Alberto locks the private payment.",
+              "Bruno fulfills the order.",
+              "Ziggy confirms delivery; Bruno receives.",
+            ].map((item, index) => <li key={item} className="flex gap-3 text-sm font-bold"><span className="grid h-6 w-6 shrink-0 place-items-center border-2 border-neutral-950 bg-white text-xs">{index + 1}</span><span>{item}</span></li>)}
+          </ol>
+        </div>
+        <div id="privacy"><PrivacyPath /></div>
+      </section>
+
+      <section className="nb-card-guide mt-14 flex flex-col items-start justify-between gap-5 p-6 sm:flex-row sm:items-center">
+        <div><p className="text-xs font-black uppercase tracking-wider">Ready to place order #{"IRIE-001"}?</p><h2 className="mt-1 text-2xl font-black uppercase">See confidential commerce in action.</h2></div>
+        <Link href="/escrow" className="nb-control shrink-0 bg-white px-6 py-3 text-sm uppercase">Start demo →</Link>
+      </section>
     </main>
   );
 }

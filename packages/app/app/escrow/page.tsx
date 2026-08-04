@@ -4,11 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { useActiveDeployment } from "@/lib/active-deployment";
 import { Addr } from "../addr";
+import { OrderCard, PrivacyPath } from "./irie-order";
 
 type Step = {
   id: number;
   phase: string;
-  actor: "Setup" | "Payer" | "Approver" | "Receiver";
+  actor: "Setup" | "Alberto" | "Ziggy" | "Bruno";
   title: string;
   summary: string;
   action: string;
@@ -22,17 +23,17 @@ type Step = {
 const STEPS: Step[] = [
   {
     id: 1,
-    phase: "Accounts",
+    phase: "Meet the crew",
     actor: "Setup",
-    title: "Create three Testnet accounts",
+    title: "Set up the three characters",
     summary:
-      "Create separate Freighter accounts for Payer, Approver, and Receiver. Keep their public G… addresses nearby.",
+      "Create separate Freighter accounts for Alberto, Ziggy, and Bruno. Each character signs only their part of the order.",
     action: "Open wallet preparation",
     public: ["Three public Testnet addresses"],
     private: ["Recovery phrases and private keys"],
     mechanics: [
       "Set Freighter to Testnet.",
-      "Create and clearly label three different accounts.",
+      "Create accounts labelled Alberto, Ziggy, and Bruno.",
       "Fund every account with Testnet XLM for transaction fees.",
     ],
     expected: "You have three different G… addresses and each account has Testnet XLM.",
@@ -41,16 +42,16 @@ const STEPS: Step[] = [
   {
     id: 2,
     phase: "Receiver",
-    actor: "Receiver",
-    title: "Register the receiver",
+    actor: "Bruno",
+    title: "Give Bruno a private receiving account",
     summary:
-      "Register the Receiver before any payment is released so the confidential transfer has a valid destination.",
+      "Register Bruno before delivery so the confidential payment has a valid private destination.",
     action: "Register receiver",
     public: ["Receiver address", "Registration transaction"],
     private: ["Receiver confidential keys"],
     mechanics: [
-      "Switch Freighter to Escrow Receiver and refresh the Wallet page.",
-      "Connect and confirm the displayed G… address is the Receiver.",
+      "Switch Freighter to Bruno and refresh the Wallet page.",
+      "Connect and confirm the displayed G… address is Bruno's.",
       "Click Register and approve the Testnet transaction.",
     ],
     expected: "Wallet shows Registered and both balances begin at 0 USDC.",
@@ -59,16 +60,16 @@ const STEPS: Step[] = [
   {
     id: 3,
     phase: "Payer",
-    actor: "Payer",
-    title: "Prepare the payer balance",
+    actor: "Alberto",
+    title: "Prepare Alberto's private funds",
     summary:
-      "Register the Payer, deposit public Testnet USDC, and merge it into a spendable confidential balance.",
+      "Register Alberto, deposit public Testnet USDC, and turn it into a spendable confidential balance.",
     action: "Prepare payer",
     public: ["Payer address", "Public deposit amount"],
     private: ["Spendable confidential balance"],
     mechanics: [
-      "Switch Freighter to Escrow Payer, refresh, connect, and Register.",
-      "Deposit a small Testnet USDC amount such as 10 USDC.",
+      "Switch Freighter to Alberto, refresh, connect, and Register.",
+      "Deposit enough Testnet USDC for the 25 USDC order.",
       "Click Merge so Receiving becomes Spendable.",
     ],
     expected: "Payer Wallet shows Registered, Receiving 0, and a positive Spendable USDC balance.",
@@ -77,16 +78,16 @@ const STEPS: Step[] = [
   {
     id: 4,
     phase: "Initialize",
-    actor: "Approver",
-    title: "Create the escrow",
+    actor: "Ziggy",
+    title: "Open the order escrow",
     summary:
-      "The connected Approver deploys a fresh escrow from the shared factory and sets the fixed Payer and Receiver addresses.",
+      "Ziggy opens a fresh escrow for order #IRIE-001 and assigns Alberto as buyer and Bruno as seller.",
     action: "Create escrow",
     public: ["Payer, Receiver, and Approver addresses", "Initialized status"],
     private: ["Escrow confidential key"],
     mechanics: [
-      "Switch Freighter to Escrow Approver and refresh the Approver page.",
-      "Paste the Payer and Receiver G… addresses into the labeled fields.",
+      "Switch Freighter to Ziggy and refresh the Delivery Partner page.",
+      "Paste Alberto's and Bruno's G… addresses into the labelled fields.",
       "Click Create escrow with Freighter and approve the deployment request.",
       "Sign the key message, then approve initialization.",
     ],
@@ -96,17 +97,17 @@ const STEPS: Step[] = [
   {
     id: 5,
     phase: "Fund",
-    actor: "Payer",
-    title: "Fund the private milestone",
+    actor: "Alberto",
+    title: "Lock the private payment",
     summary:
-      "The Payer converts part of the spendable confidential balance into the escrow's complete private allowance.",
+      "Alberto locks the order payment in escrow. The chain can verify that it is funded without revealing the amount.",
     action: "Fund milestone",
     public: ["Payer and escrow addresses", "Funded status"],
     private: ["Milestone amount", "Remaining payer balance"],
     mechanics: [
-      "Switch Freighter to Escrow Payer and refresh the Payer page.",
-      "Enter an amount no greater than the displayed Spendable balance.",
-      "Click Fund milestone privately and wait for proof generation.",
+      "Switch Freighter to Alberto and refresh the Buyer page.",
+      "Enter 25 USDC, no greater than Alberto's Spendable balance.",
+      "Click Lock order payment and wait for proof generation.",
     ],
     expected: "Shared escrow state changes from Initialized to Funded.",
     href: "/escrow/payer",
@@ -114,17 +115,17 @@ const STEPS: Step[] = [
   {
     id: 6,
     phase: "Release",
-    actor: "Approver",
-    title: "Approve and release everything",
+    actor: "Ziggy",
+    title: "Confirm delivery and release",
     summary:
-      "The Approver authorizes one atomic action that releases the escrow's complete private allowance to the fixed Receiver.",
+      "After delivering the package, Ziggy confirms delivery and releases the complete private payment to Bruno.",
     action: "Approve & release",
     public: ["Approver action", "Receiver address", "Released status"],
     private: ["Released amount", "Participant balances"],
     mechanics: [
-      "Switch Freighter to Escrow Approver and refresh the Approver page.",
+      "Switch Freighter to Ziggy and refresh the Delivery Partner page.",
       "Confirm Shared escrow state says Funded.",
-      "Click Approve & release all and wait for proof generation.",
+      "Click Confirm delivery & release and wait for proof generation.",
     ],
     expected: "Shared escrow state changes from Funded to Released.",
     href: "/escrow/approver",
@@ -132,17 +133,17 @@ const STEPS: Step[] = [
   {
     id: 7,
     phase: "Collect",
-    actor: "Receiver",
-    title: "Merge the received payment",
+    actor: "Bruno",
+    title: "Collect Bruno's private payment",
     summary:
-      "The Receiver discovers the incoming confidential USDC and merges it into the spendable private balance.",
+      "Bruno discovers the incoming confidential USDC and merges it into his spendable private balance.",
     action: "Collect payment",
     public: ["Receiver address", "Merge transaction"],
     private: ["Incoming amount", "New spendable balance"],
     mechanics: [
-      "Switch Freighter to Escrow Receiver and refresh the Receiver page.",
-      "Connect and wait for Receiving to show the incoming amount.",
-      "Click Merge received funds and approve the transaction.",
+      "Switch Freighter to Bruno and refresh the Seller page.",
+      "Connect and sync until Receiving shows the private payment.",
+      "Click Make payment spendable and approve the transaction.",
     ],
     expected: "Receiving becomes 0 and Spendable increases. The demo is complete.",
     href: "/escrow/receiver",
@@ -151,9 +152,9 @@ const STEPS: Step[] = [
 
 const actorTone: Record<Step["actor"], string> = {
   Setup: "bg-amber-400 text-neutral-950",
-  Payer: "bg-orange-500 text-neutral-950",
-  Approver: "bg-amber-300 text-neutral-950",
-  Receiver: "bg-emerald-500 text-neutral-950",
+  Alberto: "bg-orange-500 text-neutral-950",
+  Ziggy: "bg-amber-300 text-neutral-950",
+  Bruno: "bg-emerald-500 text-neutral-950",
 };
 
 export default function EscrowWalkthroughPage() {
@@ -164,18 +165,20 @@ export default function EscrowWalkthroughPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-5 py-10 sm:py-14">
-      <header className="mb-10">
+      <header className="mb-10 grid items-end gap-6 lg:grid-cols-[1fr_22rem]">
+        <div>
         <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
-          <span className="nb-kicker">Testnet PoC</span>
+          <span className="nb-kicker">Irie Market · Order #IRIE-001</span>
           <span className="nb-chip px-2.5 py-1">
-            One milestone · One approval · Full release
+            Happy path · Private payment · Real contracts
           </span>
         </div>
-        <h1 className="nb-title">Private milestone escrow</h1>
+        <h1 className="nb-title">A private order, from cart to cash.</h1>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-neutral-400">
-          Follow one confidential USDC payment from funding to release. The people and lifecycle
-          remain visible on Stellar; the milestone amount and balances remain private.
+          Alberto buys from Bruno. Ziggy delivers the package and confirms fulfillment. Follow the order story first; open the technical details when you want to see the protocol underneath.
         </p>
+        </div>
+        <OrderCard compact />
       </header>
 
       {!escrow && (
@@ -183,17 +186,19 @@ export default function EscrowWalkthroughPage() {
           <div className="flex gap-3">
             <span aria-hidden className="mt-0.5 text-amber-300">●</span>
             <div>
-              <p className="text-sm font-medium text-amber-300">Create your first escrow</p>
+              <p className="text-sm font-black uppercase">Start order #IRIE-001</p>
               <p className="mt-1 text-xs leading-relaxed text-neutral-400">
-                No escrow has been selected yet. Complete steps 1–3, then use the Approver page in
-                step 4 to create one with Freighter.
+                Meet the three characters, prepare Bruno and Alberto, then let Ziggy open the order escrow.
               </p>
             </div>
           </div>
         </div>
       )}
 
-      <section aria-label="Escrow progress" className="mb-7 overflow-x-auto pb-2">
+      <div className="nb-card-guide mb-4 p-4 text-sm font-bold">
+        Five story chapters: setup → prepare funds → open escrow → lock payment → deliver and collect. The seven numbered actions below expose the exact on-chain operations.
+      </div>
+      <section aria-label="Order progress" className="mb-7 overflow-x-auto pb-2">
         <ol className="flex min-w-[760px] items-start">
           {STEPS.map((item, index) => {
             const activeStep = item.id === selected;
@@ -280,7 +285,7 @@ export default function EscrowWalkthroughPage() {
           <VisibilityCard title="Kept confidential" tone="private" items={step.private} />
 
           <section className="nb-card p-4 text-xs">
-            <p className="font-medium text-neutral-300">Active contracts</p>
+            <p className="font-black uppercase">Technical details</p>
             <dl className="mt-3 space-y-2 text-neutral-500">
               <div className="flex items-center justify-between gap-3">
                 <dt>Token wrapper</dt>
@@ -298,6 +303,8 @@ export default function EscrowWalkthroughPage() {
           </section>
         </aside>
       </div>
+
+      <div className="mt-8"><PrivacyPath /></div>
 
       <section className="nb-card mt-8 p-4 text-xs leading-relaxed text-neutral-500">
         <strong className="font-medium text-neutral-300">Known v0 limitation:</strong> the payer can revoke or let the

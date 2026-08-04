@@ -12,6 +12,7 @@ import { ErrorBox } from "../../error-box";
 import { LogPanel } from "../../log-panel";
 import { EscrowStateCard } from "../escrow-state";
 import { AccountSwitchReminder, BeginnerGuide } from "../guide";
+import { ActorContext } from "../irie-order";
 
 export default function ApproverPage() {
   const { active, escrows, setActiveEscrow } = useActiveDeployment();
@@ -103,47 +104,48 @@ export default function ApproverPage() {
   };
 
   return (
-    <PageShell title="Escrow approver" subtitle="Create a fresh escrow with Freighter, then approve its milestone and atomically release the complete private allowance.">
+    <PageShell title="Ziggy confirms delivery" subtitle="Act as the delivery partner: open the order escrow, then release payment only after the package arrives.">
       {!active.contracts.factory && <ErrorBox className="mb-6">No shared escrow factory is configured. Run the one-time Testnet protocol deployment first.</ErrorBox>}
       {error && <ErrorBox className="mb-6">{error}</ErrorBox>}
       <div className="space-y-6">
+        <ActorContext actor="Ziggy">Ziggy is the delivery approver. The marketplace hosts the order, but Ziggy confirms the real-world handoff.</ActorContext>
         {!state ? (
           <BeginnerGuide
-            step="Step 4 of 7"
-            title="Create the escrow as the approver"
-            account="Escrow Approver"
+            step="Order action 3 of 5"
+            title="Open escrow for order #IRIE-001"
+            account="Ziggy · Delivery partner"
             before={[
-              "Freighter is on Testnet and the Approver account is selected.",
-              "You have copied the Payer and Receiver public G… addresses.",
+              "Freighter is on Testnet and Ziggy's account is selected.",
+              "You have copied Alberto's and Bruno's public G… addresses.",
               "Payer, Receiver, and Approver are three different accounts.",
             ]}
             actions={[
-              "Paste the Payer address and the Receiver address in the correct fields.",
-              "Check that neither address matches the connected Approver address.",
-              "Click Create escrow with Freighter and approve the deployment request.",
+              "Paste Alberto's address as Buyer and Bruno's as Seller.",
+              "Check that neither address matches Ziggy's connected address.",
+              "Click Open order escrow and approve the deployment request.",
               "Sign the escrow key message, then approve the initialization request.",
             ]}
             expected="A new escrow contract is created, selected in the app, and shows Initialized with all three roles."
-            next={{ href: "/escrow/payer", label: "switch to the Payer account and fund the milestone" }}
+            next={{ href: "/escrow/payer", label: "switch to Alberto and lock the order payment" }}
           />
         ) : (
           <BeginnerGuide
-            step="Step 6 of 7"
-            title="Approve and release the full payment"
-            account="Escrow Approver"
+            step="Order action 5 of 5"
+            title="Confirm delivery and release"
+            account="Ziggy · Delivery partner"
             before={[
-              "Freighter is on Testnet and the configured Approver account is selected.",
+              "Freighter is on Testnet and Ziggy's account is selected.",
               "Shared escrow state says Funded. If it says Initialized, the Payer must fund it first.",
               "The Receiver was registered in the confidential wallet before release.",
             ]}
             actions={[
-              "Connect the approver wallet below.",
-              "Confirm the connected address matches the Approver shown in Shared escrow state.",
-              "Click Approve & release all and approve the Freighter request.",
+              "Connect Ziggy's wallet below.",
+              "Confirm the connected address matches Ziggy in Order escrow state.",
+              "Click Confirm delivery & release and approve the Freighter request.",
               "Wait while the app generates the proof and submits the transaction.",
             ]}
             expected="Shared escrow state changes to “Released”."
-            next={{ href: "/escrow/receiver", label: "switch to the Receiver account and collect the payment" }}
+            next={{ href: "/escrow/receiver", label: "hand off to Bruno so he can collect the private payment" }}
           />
         )}
         <AccountSwitchReminder />
@@ -169,17 +171,17 @@ export default function ApproverPage() {
         )}
         {(showCreate || !state) && (
           <section className="rounded-lg border border-violet-500/25 bg-violet-500/5 p-5">
-            <h2 className="font-semibold">Create a fresh escrow</h2>
-            <p className="mt-2 text-xs text-neutral-400">The Freighter account you select becomes the Approver. You may reuse the same three role addresses; every click deploys a separate contract with fresh state.</p>
+            <h2 className="font-semibold">Open a fresh order escrow</h2>
+            <p className="mt-2 text-xs text-neutral-400">The connected Freighter account becomes Ziggy, the delivery approver. Each order gets a separate contract with fresh state.</p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <AddressInput label="Payer address" value={payer} onChange={setPayer} />
-              <AddressInput label="Receiver address" value={receiver} onChange={setReceiver} />
+              <AddressInput label="Alberto · Buyer address" value={payer} onChange={setPayer} />
+              <AddressInput label="Bruno · Seller address" value={receiver} onChange={setReceiver} />
             </div>
             {roleError && <ErrorBox className="mt-3" size="sm">{roleError}</ErrorBox>}
             <button onClick={create} disabled={busy !== null || !active.contracts.factory || !cleanPayer || !cleanReceiver || Boolean(roleError)} className="mt-4 rounded bg-violet-600 px-4 py-2 text-sm font-semibold hover:bg-violet-500 disabled:opacity-50">
               {busy === "create"
                 ? phase === "deploying" ? "Deploying escrow…" : phase === "proving" ? "Generating proof…" : "Initializing escrow…"
-                : "Create escrow with Freighter"}
+                : "Open order escrow"}
             </button>
           </section>
         )}
@@ -194,16 +196,16 @@ export default function ApproverPage() {
         )}
         {state && !showCreate && !controller && (
           <button onClick={connect} disabled={busy !== null} className="rounded bg-violet-600 px-4 py-2 font-medium hover:bg-violet-500 disabled:opacity-50">
-            {busy === "connect" ? "Connecting…" : "Connect approver wallet"}
+            {busy === "connect" ? "Connecting…" : "Connect as Ziggy"}
           </button>
         )}
         {state && !showCreate && controller && (
           <section className="rounded-lg border border-violet-500/25 bg-violet-500/5 p-5">
-            <h2 className="font-semibold">Approve and release</h2>
-            <p className="mt-2 text-sm text-neutral-300">One approval releases the entire confidential allowance. No amount or receiver can be edited here.</p>
+            <h2 className="font-semibold">Delivery confirmation</h2>
+            <p className="mt-2 text-sm text-neutral-300">Ziggy has delivered the package. One confirmation releases the complete private payment to Bruno; the amount and recipient cannot be edited here.</p>
             {controller.approverAddress !== state.approver && <p className="mt-3 text-sm text-amber-300">The connected wallet is not the configured approver.</p>}
             <button onClick={run("release", (c) => c.approveAndRelease(setPhase))} disabled={busy !== null || state.status !== "Funded" || controller.approverAddress !== state.approver} className="mt-4 rounded bg-violet-600 px-4 py-2 text-sm font-semibold hover:bg-violet-500 disabled:opacity-50">
-              {busy === "release" ? (phase === "proving" ? "Proving full release…" : "Submitting release…") : state.status === "Released" ? "Already released" : "Approve & release all"}
+              {busy === "release" ? (phase === "proving" ? "Generating privacy proof…" : "Releasing payment…") : state.status === "Released" ? "Delivery confirmed · payment released" : "Confirm delivery & release"}
             </button>
           </section>
         )}

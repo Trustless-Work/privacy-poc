@@ -13,6 +13,7 @@ import { ErrorBox } from "../../error-box";
 import { LogPanel } from "../../log-panel";
 import { EscrowStateCard } from "../escrow-state";
 import { AccountSwitchReminder, BeginnerGuide } from "../guide";
+import { ActorContext } from "../irie-order";
 
 export default function ReceiverPage() {
   const { active } = useActiveDeployment();
@@ -47,38 +48,39 @@ export default function ReceiverPage() {
 
   const isReceiver = Boolean(wallet && state && wallet.address === state.receiver);
   return (
-    <PageShell title="Escrow receiver" subtitle="Discover the released confidential USDC and merge it from receiving into the receiver's spendable private balance.">
-      {!escrowAddress && <ErrorBox className="mb-6">No singleton escrow is configured. Run the testnet deployment first.</ErrorBox>}
+    <PageShell title="Bruno collects payment" subtitle="Act as the seller, discover the released confidential USDC, and make it privately spendable.">
+      {!escrowAddress && <ErrorBox className="mb-6">No order escrow is selected. Ziggy must open one before Bruno can collect payment.</ErrorBox>}
       {error && <ErrorBox className="mb-6">{error}</ErrorBox>}
       <div className="space-y-6">
+        <ActorContext actor="Bruno">Connect Bruno&apos;s Freighter account. The released payment arrives privately in Receiving before it becomes Spendable.</ActorContext>
         <BeginnerGuide
-          step="Step 7 of 7"
-          title="Collect the payment as the receiver"
-          account="Escrow Receiver"
+          step="Order action 5 of 5 · collection"
+          title="Collect the private payment"
+          account="Bruno · Seller"
           before={[
-            "Freighter is on Testnet and the configured Receiver account is selected.",
-            "The Receiver was registered on the Wallet page before the release.",
+            "Freighter is on Testnet and Bruno's account is selected.",
+            "Bruno was registered on the Wallet page before the release.",
             "Shared escrow state says Released.",
           ]}
           actions={[
-            "Connect the receiver wallet below.",
-            "Confirm the connected G… address matches the Receiver in Shared escrow state.",
-            "Wait for Receiving to show the incoming USDC amount.",
-            "Click Merge received funds and approve the Freighter request.",
+            "Connect Bruno's wallet below.",
+            "Confirm the connected G… address matches Bruno in Order escrow state.",
+            "Sync until Receiving shows the incoming private payment.",
+            "Click Make payment spendable and approve the Freighter request.",
           ]}
           expected="Receiving becomes 0 USDC and Spendable increases by the released amount. The demo is complete."
         />
         <AccountSwitchReminder />
         <EscrowStateCard state={state} />
-        {!wallet ? <button onClick={connect} disabled={busy !== null || !escrowAddress} className="rounded bg-emerald-600 px-4 py-2 font-medium hover:bg-emerald-500 disabled:opacity-50">{busy === "connect" ? "Connecting…" : "Connect receiver wallet"}</button> : (
+        {!wallet ? <button onClick={connect} disabled={busy !== null || !escrowAddress} className="rounded bg-emerald-600 px-4 py-2 font-medium hover:bg-emerald-500 disabled:opacity-50">{busy === "connect" ? "Connecting…" : "Connect as Bruno"}</button> : (
           <section className="rounded-lg border border-emerald-500/25 bg-emerald-500/5 p-5">
-            <h2 className="font-semibold">Receive and merge</h2>
+            <h2 className="font-semibold">Bruno&apos;s private payment</h2>
             <dl className="mt-3 grid grid-cols-2 gap-3 text-sm"><div><dt className="text-neutral-500">Receiving</dt><dd className="mt-1 text-lg font-semibold">{view ? stroopsToXlm(view.receiving) : "—"} USDC</dd></div><div><dt className="text-neutral-500">Spendable</dt><dd className="mt-1 text-lg font-semibold">{view ? stroopsToXlm(view.spendable) : "—"} USDC</dd></div></dl>
             {!isReceiver && <p className="mt-3 text-sm text-amber-300">This wallet is not the configured receiver.</p>}
             {isReceiver && !view?.registered && <p className="mt-3 text-sm text-amber-300">Not ready: register this Receiver account on the Wallet page first.</p>}
             {isReceiver && state?.status !== "Released" && <p className="mt-3 text-sm text-amber-300">Not ready: the Approver must release the escrow first.</p>}
             {isReceiver && view?.registered && view.receiving === 0n && state?.status === "Released" && <p className="mt-3 text-sm text-amber-300">No receiving balance found yet. Sync the wallet or refresh this page, then check again.</p>}
-            <button onClick={merge} disabled={busy !== null || !isReceiver || !view?.registered || view.receiving === 0n} className="mt-4 rounded bg-emerald-600 px-4 py-2 text-sm font-semibold hover:bg-emerald-500 disabled:opacity-50">{busy === "merge" ? "Merging…" : "Merge received funds"}</button>
+            <button onClick={merge} disabled={busy !== null || !isReceiver || !view?.registered || view.receiving === 0n} className="mt-4 rounded bg-emerald-600 px-4 py-2 text-sm font-semibold hover:bg-emerald-500 disabled:opacity-50">{busy === "merge" ? "Making payment spendable…" : "Make payment spendable"}</button>
           </section>
         )}
         <LogPanel logs={logs} />
