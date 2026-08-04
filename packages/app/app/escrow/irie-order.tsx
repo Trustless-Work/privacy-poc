@@ -6,15 +6,22 @@ export const IRIE_ORDER = {
   description: "Caribbean herbs, hot sauce, and recipe cards",
   amount: "25 USDC",
   buyer: "Alberto",
-  seller: "Bruno",
-  approver: "Ziggy",
+  operator: "Ziggy",
+  receiver: "Buju B.",
 } as const;
 
-const CAST = {
-  Alberto: { emoji: "👨🏽‍💻", label: "Buyer", action: "Locks the private payment" },
-  Bruno: { emoji: "🧑🏽‍🍳", label: "Seller", action: "Prepares the order" },
-  Ziggy: { emoji: "🚲", label: "Delivery partner", action: "Confirms delivery" },
-} as const;
+type CastMember = {
+  emoji?: string;
+  image?: string;
+  label: string;
+  action: string;
+};
+
+const CAST: Record<"Alberto" | "Ziggy" | "Buju B.", CastMember> = {
+  Alberto: { emoji: "👨🏽‍💻", label: "Customer", action: "Places and funds the private order" },
+  Ziggy: { image: "/characters/ziggy.png", label: "Store operator", action: "Takes, initializes, and delivers the order" },
+  "Buju B.": { image: "/characters/buju-b.png", label: "Boss · Payment receiver", action: "Receives the private payment" },
+};
 
 export type IrieActor = keyof typeof CAST;
 
@@ -22,8 +29,8 @@ export function CastCard({ actor }: { actor: IrieActor }) {
   const person = CAST[actor];
   return (
     <article className="nb-card flex items-center gap-3 p-4">
-      <span className="grid h-12 w-12 shrink-0 place-items-center border-2 border-neutral-950 bg-amber-300 text-2xl shadow-[2px_2px_0_#151515]" aria-hidden>
-        {person.emoji}
+      <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden border-2 border-neutral-950 bg-amber-300 text-2xl shadow-[2px_2px_0_#151515]" aria-hidden>
+        {person.image ? <img src={person.image} alt="" className="h-full w-full object-contain [image-rendering:pixelated]" /> : person.emoji}
       </span>
       <div>
         <p className="font-black uppercase leading-tight">{actor}</p>
@@ -50,9 +57,9 @@ export function OrderCard({ compact = false }: { compact?: boolean }) {
           </div>
         </div>
         <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 border-t-2 border-neutral-950 pt-4 text-xs sm:grid-cols-4">
-          <OrderFact label="Buyer" value={IRIE_ORDER.buyer} />
-          <OrderFact label="Seller" value={IRIE_ORDER.seller} />
-          <OrderFact label="Delivery" value={IRIE_ORDER.approver} />
+          <OrderFact label="Customer" value={IRIE_ORDER.buyer} />
+          <OrderFact label="Store operator" value={IRIE_ORDER.operator} />
+          <OrderFact label="Payment receiver" value={IRIE_ORDER.receiver} />
           <OrderFact label="Price" value={`${IRIE_ORDER.amount} · private`} />
         </dl>
       </div>
@@ -69,7 +76,9 @@ export function ActorContext({ actor, children }: { actor: IrieActor; children?:
   return (
     <section className="nb-card-guide mb-6 flex flex-col justify-between gap-4 p-4 sm:flex-row sm:items-center">
       <div className="flex items-center gap-3">
-        <span className="text-3xl" aria-hidden>{person.emoji}</span>
+        <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden border-2 border-neutral-950 bg-white text-3xl" aria-hidden>
+          {person.image ? <img src={person.image} alt="" className="h-full w-full object-contain [image-rendering:pixelated]" /> : person.emoji}
+        </span>
         <div>
           <p className="text-[10px] font-black uppercase tracking-wider">You are acting as</p>
           <p className="text-lg font-black uppercase">{actor} · {person.label}</p>
@@ -90,7 +99,7 @@ export function PrivacyPath() {
         <span className="text-xl" aria-hidden>→</span>
         <div className="border-2 border-neutral-950 bg-orange-500 p-3 text-neutral-950">Confidential escrow</div>
         <span className="text-xl" aria-hidden>→</span>
-        <div className="border-2 border-neutral-950 bg-lime-500 p-3 text-neutral-950">Bruno&apos;s private balance</div>
+        <div className="border-2 border-neutral-950 bg-lime-500 p-3 text-neutral-950">Buju B.&apos;s private balance</div>
       </div>
       <p className="mt-4 text-sm leading-relaxed text-neutral-500">
         Stellar shows that the order was funded and released, but not the amount or either participant&apos;s confidential balance. Addresses and lifecycle events remain public.

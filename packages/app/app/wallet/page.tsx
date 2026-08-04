@@ -150,22 +150,23 @@ export default function Page() {
 
   return (
     <PageShell
-      title="Prepare the order crew"
-      subtitle="Before the purchase, give Bruno a private receiving account and prepare Alberto's confidential USDC. Connect one character at a time."
+      title="Prepare the order wallets"
+      subtitle="Before Ziggy initializes the order, give Buju B. a private receiving account and prepare Alberto's confidential USDC. Connect one character at a time."
+      back={{ href: "/escrow", label: "Back to order walkthrough" }}
     >
       <div className="mb-6"><OrderCard compact /></div>
       <section className="mb-6 rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-5">
-        <p className="text-xs font-semibold uppercase tracking-wider text-indigo-300">Order setup · actions 1–2 of 5</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-indigo-300">Order step 1 of 5 · Place order</p>
         <h2 className="mt-1 text-lg font-semibold">Which character are you preparing?</h2>
         <p className="mt-2 text-sm leading-relaxed text-neutral-400">
-          Bruno only needs registration to receive. Alberto registers, deposits, and merges enough private USDC for the order.
+          Buju B. only needs registration to receive. Alberto registers, deposits, and merges enough private USDC for the order.
         </p>
         <div className="mt-5 grid gap-4 md:grid-cols-2">
           <WalletRoleCard
-            role="Bruno · Seller"
+            role="Buju B. · Payment receiver"
             step="Prepare to receive"
             items={[
-              "Select Bruno's account in Freighter, then refresh this page.",
+              "Select Buju B.'s account in Freighter, then refresh this page.",
               "Connect Freighter and verify the displayed G… address.",
               "Click Register and approve the Testnet transaction.",
               "Stop when Registered is shown. The Receiver needs no deposit.",
@@ -173,7 +174,7 @@ export default function Page() {
             success="Registered · Spendable 0 · Receiving 0"
           />
           <WalletRoleCard
-            role="Alberto · Buyer"
+            role="Alberto · Customer"
             step="Prepare to buy"
             items={[
               "Select Alberto's account in Freighter, then refresh this page.",
@@ -356,7 +357,7 @@ function WalletRoleCard({
   items,
   success,
 }: {
-  role: "Alberto · Buyer" | "Bruno · Seller";
+  role: "Alberto · Customer" | "Buju B. · Payment receiver";
   step: string;
   items: string[];
   success: string;

@@ -20,9 +20,9 @@ import { truncateMiddle } from "@/lib/format";
 
 export const PERSONAS = [
   { href: "/escrow", label: "Guided order", text: "text-emerald-300" },
-  { href: "/escrow/payer", label: "Alberto · Buyer", text: "text-orange-500" },
-  { href: "/escrow/approver", label: "Ziggy · Delivery", text: "text-amber-400" },
-  { href: "/escrow/receiver", label: "Bruno · Seller", text: "text-emerald-500" },
+  { href: "/escrow/payer", label: "Alberto · Customer", text: "text-orange-500" },
+  { href: "/escrow/approver", label: "Ziggy · Store operator", text: "text-amber-400" },
+  { href: "/escrow/receiver", label: "Buju B. · Receiver", text: "text-emerald-500" },
   { href: "/wallet", label: "Prepare private funds", text: "text-indigo-300" },
   { href: "/verify", label: "Disclosure receiver", text: "text-cyan-300" },
   { href: "/auditor", label: "Auditor", text: "text-amber-300" },

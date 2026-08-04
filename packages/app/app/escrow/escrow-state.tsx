@@ -12,9 +12,9 @@ export function EscrowStateCard({ state }: { state: OnChainEscrow | null }) {
       </div>
       {state ? (
         <dl className="mt-4 grid gap-3 text-xs sm:grid-cols-3">
-          <Role label="Alberto · Buyer" address={state.payer} />
-          <Role label="Bruno · Seller" address={state.receiver} />
-          <Role label="Ziggy · Delivery" address={state.approver} />
+          <Role label="Alberto · Customer / Payer" address={state.payer} />
+          <Role label="Buju B. · Payment receiver" address={state.receiver} />
+          <Role label="Ziggy · Store operator / Approver" address={state.approver} />
         </dl>
       ) : (
         <p className="mt-3 text-xs leading-relaxed text-neutral-400">

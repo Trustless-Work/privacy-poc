@@ -12,7 +12,7 @@ export default function LandingPage() {
           <div className="flex flex-wrap items-center gap-3"><span className="nb-kicker">Irie Market · Stellar Testnet</span><ServingBadge /></div>
           <h1 className="mt-6 max-w-[12ch] text-5xl font-black uppercase leading-[.9] tracking-[-.065em] sm:text-7xl">Buy privately. Deliver fairly.</h1>
           <p className="mt-6 max-w-xl text-base font-medium leading-relaxed text-neutral-500">
-            Follow Alberto as he buys an Irie Oregano Kit from Bruno. Ziggy confirms delivery, and confidential escrow releases the payment without revealing its amount on-chain.
+            Alberto calls Ziggy to order an Irie Oregano Kit. Ziggy opens the escrow and delivers the product; Buju B., the boss, receives the confidential payment.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link href="/escrow" className="nb-action px-6 py-3 text-sm uppercase">Start the guided demo →</Link>
@@ -24,7 +24,7 @@ export default function LandingPage() {
 
       <section className="mt-14">
         <p className="nb-kicker">Meet the order crew</p>
-        <div className="mt-5 grid gap-4 md:grid-cols-3"><CastCard actor="Alberto" /><CastCard actor="Bruno" /><CastCard actor="Ziggy" /></div>
+        <div className="mt-5 grid gap-4 md:grid-cols-3"><CastCard actor="Alberto" /><CastCard actor="Ziggy" /><CastCard actor="Buju B." /></div>
       </section>
 
       <section className="mt-14 grid gap-6 lg:grid-cols-[1fr_1.05fr]">
@@ -32,11 +32,11 @@ export default function LandingPage() {
           <p className="text-xs font-black uppercase tracking-wider">The happy path</p>
           <ol className="mt-5 space-y-4">
             {[
-              "Alberto prepares confidential USDC.",
-              "Ziggy opens an escrow for the order.",
-              "Alberto locks the private payment.",
-              "Bruno fulfills the order.",
-              "Ziggy confirms delivery; Bruno receives.",
+              "Alberto calls Ziggy and places the order.",
+              "Ziggy initializes the order escrow.",
+              "Alberto funds it with confidential USDC.",
+              "Ziggy delivers the Irie Oregano Kit.",
+              "Buju B. receives the private payment.",
             ].map((item, index) => <li key={item} className="flex gap-3 text-sm font-bold"><span className="grid h-6 w-6 shrink-0 place-items-center border-2 border-neutral-950 bg-white text-xs">{index + 1}</span><span>{item}</span></li>)}
           </ol>
         </div>

@@ -63,15 +63,15 @@ export default function PayerPage() {
   );
 
   return (
-    <PageShell title="Alberto locks the payment" subtitle="Act as the buyer and fund order #IRIE-001 without publishing its 25 USDC amount on-chain.">
+    <PageShell title="Alberto funds the order" subtitle="Act as the customer and fund order #IRIE-001 without publishing its 25 USDC amount on-chain." back={{ href: "/escrow", label: "Back to order walkthrough" }}>
       {!escrowAddress && <ErrorBox className="mb-6">No order escrow is selected. Ask Ziggy to open one first.</ErrorBox>}
       {error && <ErrorBox className="mb-6">{error}</ErrorBox>}
       <div className="space-y-6">
-        <ActorContext actor="Alberto">Connect Alberto&apos;s Freighter account. The expected buyer address is shown in the order escrow below.</ActorContext>
+        <ActorContext actor="Alberto">Connect Alberto&apos;s Freighter account. The expected customer address is shown in the order escrow below.</ActorContext>
         <BeginnerGuide
-          step="Order action 4 of 5"
+          step="Order step 3 of 5"
           title="Lock the order payment"
-          account="Alberto · Buyer"
+          account="Alberto · Customer"
           before={[
             "Freighter is on Testnet and Alberto's account is selected.",
             "Shared escrow state says Initialized.",

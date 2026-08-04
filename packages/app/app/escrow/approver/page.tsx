@@ -104,23 +104,23 @@ export default function ApproverPage() {
   };
 
   return (
-    <PageShell title="Ziggy confirms delivery" subtitle="Act as the delivery partner: open the order escrow, then release payment only after the package arrives.">
+    <PageShell title="Ziggy runs the order" subtitle="Act as the store operator: initialize Alberto's order, deliver the product, then release payment to Buju B." back={{ href: "/escrow", label: "Back to order walkthrough" }}>
       {!active.contracts.factory && <ErrorBox className="mb-6">No shared escrow factory is configured. Run the one-time Testnet protocol deployment first.</ErrorBox>}
       {error && <ErrorBox className="mb-6">{error}</ErrorBox>}
       <div className="space-y-6">
-        <ActorContext actor="Ziggy">Ziggy is the delivery approver. The marketplace hosts the order, but Ziggy confirms the real-world handoff.</ActorContext>
+        <ActorContext actor="Ziggy">Ziggy takes Alberto&apos;s order, initializes its escrow, delivers the product, and confirms the real-world handoff.</ActorContext>
         {!state ? (
           <BeginnerGuide
-            step="Order action 3 of 5"
+            step="Order step 2 of 5"
             title="Open escrow for order #IRIE-001"
-            account="Ziggy · Delivery partner"
+            account="Ziggy · Store operator"
             before={[
               "Freighter is on Testnet and Ziggy's account is selected.",
-              "You have copied Alberto's and Bruno's public G… addresses.",
+              "You have copied Alberto's and Buju B.'s public G… addresses.",
               "Payer, Receiver, and Approver are three different accounts.",
             ]}
             actions={[
-              "Paste Alberto's address as Buyer and Bruno's as Seller.",
+              "Paste Alberto's address as Customer and Buju B.'s as Payment receiver.",
               "Check that neither address matches Ziggy's connected address.",
               "Click Open order escrow and approve the deployment request.",
               "Sign the escrow key message, then approve the initialization request.",
@@ -130,9 +130,9 @@ export default function ApproverPage() {
           />
         ) : (
           <BeginnerGuide
-            step="Order action 5 of 5"
+            step="Order step 4 of 5"
             title="Confirm delivery and release"
-            account="Ziggy · Delivery partner"
+            account="Ziggy · Store operator"
             before={[
               "Freighter is on Testnet and Ziggy's account is selected.",
               "Shared escrow state says Funded. If it says Initialized, the Payer must fund it first.",
@@ -145,7 +145,7 @@ export default function ApproverPage() {
               "Wait while the app generates the proof and submits the transaction.",
             ]}
             expected="Shared escrow state changes to “Released”."
-            next={{ href: "/escrow/receiver", label: "hand off to Bruno so he can collect the private payment" }}
+            next={{ href: "/escrow/receiver", label: "hand off to Buju B. so he can collect the private payment" }}
           />
         )}
         <AccountSwitchReminder />
@@ -172,10 +172,10 @@ export default function ApproverPage() {
         {(showCreate || !state) && (
           <section className="rounded-lg border border-violet-500/25 bg-violet-500/5 p-5">
             <h2 className="font-semibold">Open a fresh order escrow</h2>
-            <p className="mt-2 text-xs text-neutral-400">The connected Freighter account becomes Ziggy, the delivery approver. Each order gets a separate contract with fresh state.</p>
+            <p className="mt-2 text-xs text-neutral-400">The connected Freighter account becomes Ziggy, the store operator and technical approver. Each order gets a separate contract with fresh state.</p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <AddressInput label="Alberto · Buyer address" value={payer} onChange={setPayer} />
-              <AddressInput label="Bruno · Seller address" value={receiver} onChange={setReceiver} />
+              <AddressInput label="Alberto · Customer address" value={payer} onChange={setPayer} />
+              <AddressInput label="Buju B. · Payment receiver address" value={receiver} onChange={setReceiver} />
             </div>
             {roleError && <ErrorBox className="mt-3" size="sm">{roleError}</ErrorBox>}
             <button onClick={create} disabled={busy !== null || !active.contracts.factory || !cleanPayer || !cleanReceiver || Boolean(roleError)} className="mt-4 rounded bg-violet-600 px-4 py-2 text-sm font-semibold hover:bg-violet-500 disabled:opacity-50">
@@ -202,7 +202,7 @@ export default function ApproverPage() {
         {state && !showCreate && controller && (
           <section className="rounded-lg border border-violet-500/25 bg-violet-500/5 p-5">
             <h2 className="font-semibold">Delivery confirmation</h2>
-            <p className="mt-2 text-sm text-neutral-300">Ziggy has delivered the package. One confirmation releases the complete private payment to Bruno; the amount and recipient cannot be edited here.</p>
+            <p className="mt-2 text-sm text-neutral-300">Ziggy has delivered the package. One confirmation releases the complete private payment to Buju B.; the amount and recipient cannot be edited here.</p>
             {controller.approverAddress !== state.approver && <p className="mt-3 text-sm text-amber-300">The connected wallet is not the configured approver.</p>}
             <button onClick={run("release", (c) => c.approveAndRelease(setPhase))} disabled={busy !== null || state.status !== "Funded" || controller.approverAddress !== state.approver} className="mt-4 rounded bg-violet-600 px-4 py-2 text-sm font-semibold hover:bg-violet-500 disabled:opacity-50">
               {busy === "release" ? (phase === "proving" ? "Generating privacy proof…" : "Releasing payment…") : state.status === "Released" ? "Delivery confirmed · payment released" : "Confirm delivery & release"}

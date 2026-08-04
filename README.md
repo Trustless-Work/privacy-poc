@@ -4,9 +4,9 @@ A Stellar testnet proof of concept for milestone escrow using Confidential Token
 
 ## Hackathon demo: Irie Market
 
-The application presents the protocol as a privacy-preserving marketplace order. Alberto buys a 25 USDC **Irie Oregano Kit** from Bruno. Ziggy, the delivery partner, opens the escrow and confirms the successful delivery. The escrow then releases Bruno's payment without publishing the order amount or the participants' confidential balances on-chain.
+The application presents the protocol as a privacy-preserving marketplace order. Alberto calls Ziggy to order a 25 USDC **Irie Oregano Kit**. Ziggy initializes the escrow, Alberto funds it, and Ziggy delivers the product. The escrow then releases the private payment to Buju B., the boss, without publishing the order amount or the participants' confidential balances on-chain.
 
-The primary UI tells this story in five understandable chapters while retaining the seven exact setup and contract operations underneath it. Technical wallets, auditor, disclosure, and deployment tools remain available from the role menu.
+The primary UI tells this story in five expandable steps while retaining the exact wallet and contract operations underneath it. Technical wallets, auditor, disclosure, and deployment tools remain available from the role menu.
 
 > [!WARNING]
 > This repository evaluates developer-preview cryptography. The Confidential Token circuits and UltraHonk verifier are not production-ready or approved for mainnet. Do not use real value.

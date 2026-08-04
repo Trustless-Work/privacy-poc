@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useActiveDeployment } from "@/lib/active-deployment";
 import { Addr } from "../addr";
@@ -9,7 +8,7 @@ import { OrderCard, PrivacyPath } from "./irie-order";
 type Step = {
   id: number;
   phase: string;
-  actor: "Setup" | "Alberto" | "Ziggy" | "Bruno";
+  actor: "Alberto" | "Ziggy" | "Buju B.";
   title: string;
   summary: string;
   action: string;
@@ -23,125 +22,90 @@ type Step = {
 const STEPS: Step[] = [
   {
     id: 1,
-    phase: "Meet the crew",
-    actor: "Setup",
-    title: "Set up the three characters",
+    phase: "Place order",
+    actor: "Alberto",
+    title: "Alberto calls Ziggy",
     summary:
-      "Create separate Freighter accounts for Alberto, Ziggy, and Bruno. Each character signs only their part of the order.",
-    action: "Open wallet preparation",
+      "Alberto calls Ziggy and orders an Irie Oregano Kit. Before checkout, prepare three separate wallets and the private balances the order needs.",
+    action: "Prepare the order wallets",
     public: ["Three public Testnet addresses"],
     private: ["Recovery phrases and private keys"],
     mechanics: [
       "Set Freighter to Testnet.",
-      "Create accounts labelled Alberto, Ziggy, and Bruno.",
+      "Create accounts labelled Alberto, Ziggy, and Buju B.",
       "Fund every account with Testnet XLM for transaction fees.",
+      "Register Buju B. so he can receive privately.",
+      "Register Alberto, deposit at least 25 Testnet USDC, and Merge it into Spendable.",
     ],
-    expected: "You have three different G… addresses and each account has Testnet XLM.",
+    expected: "Buju B. is registered, Alberto has at least 25 Spendable USDC, and all three G… addresses are different.",
     href: "/wallet",
   },
   {
     id: 2,
-    phase: "Receiver",
-    actor: "Bruno",
-    title: "Give Bruno a private receiving account",
+    phase: "Initialize",
+    actor: "Ziggy",
+    title: "Ziggy initializes the order",
     summary:
-      "Register Bruno before delivery so the confidential payment has a valid private destination.",
-    action: "Register receiver",
-    public: ["Receiver address", "Registration transaction"],
-    private: ["Receiver confidential keys"],
+      "Ziggy takes Alberto's order and opens a fresh escrow, assigning Alberto as payer, Buju B. as receiver, and himself as approver.",
+    action: "Initialize order escrow",
+    public: ["Payer, receiver, and approver addresses", "Initialized status"],
+    private: ["Escrow confidential key"],
     mechanics: [
-      "Switch Freighter to Bruno and refresh the Wallet page.",
-      "Connect and confirm the displayed G… address is Bruno's.",
-      "Click Register and approve the Testnet transaction.",
+      "Switch Freighter to Ziggy and refresh the Store Operator page.",
+      "Paste Alberto's address as Customer and Buju B.'s as Payment receiver.",
+      "Open the order escrow, sign the key message, and approve initialization.",
     ],
-    expected: "Wallet shows Registered and both balances begin at 0 USDC.",
-    href: "/wallet",
+    expected: "A fresh order contract is selected and its state says Initialized.",
+    href: "/escrow/approver",
   },
   {
     id: 3,
-    phase: "Payer",
+    phase: "Fund",
     actor: "Alberto",
-    title: "Prepare Alberto's private funds",
+    title: "Alberto funds the escrow",
     summary:
-      "Register Alberto, deposit public Testnet USDC, and turn it into a spendable confidential balance.",
-    action: "Prepare payer",
-    public: ["Payer address", "Public deposit amount"],
-    private: ["Spendable confidential balance"],
+      "Alberto locks the 25 USDC order payment. The network verifies the escrow is funded without publishing the amount.",
+    action: "Fund order escrow",
+    public: ["Payer and escrow addresses", "Funded status"],
+    private: ["Order amount", "Alberto's remaining private balance"],
     mechanics: [
-      "Switch Freighter to Alberto, refresh, connect, and Register.",
-      "Deposit enough Testnet USDC for the 25 USDC order.",
-      "Click Merge so Receiving becomes Spendable.",
+      "Switch Freighter to Alberto and refresh the Customer page.",
+      "Connect and confirm the wallet matches the escrow payer.",
+      "Enter 25 USDC and click Lock order payment.",
     ],
-    expected: "Payer Wallet shows Registered, Receiving 0, and a positive Spendable USDC balance.",
-    href: "/wallet",
+    expected: "The shared escrow state changes from Initialized to Funded.",
+    href: "/escrow/payer",
   },
   {
     id: 4,
-    phase: "Initialize",
+    phase: "Deliver",
     actor: "Ziggy",
-    title: "Open the order escrow",
+    title: "Ziggy delivers the product",
     summary:
-      "Ziggy opens a fresh escrow for order #IRIE-001 and assigns Alberto as buyer and Bruno as seller.",
-    action: "Create escrow",
-    public: ["Payer, Receiver, and Approver addresses", "Initialized status"],
-    private: ["Escrow confidential key"],
+      "Ziggy delivers the Irie Oregano Kit and confirms the real-world handoff, authorizing the escrow to release its private payment.",
+    action: "Confirm delivery and release",
+    public: ["Approver action", "Receiver address", "Released status"],
+    private: ["Released amount", "Participant balances"],
     mechanics: [
-      "Switch Freighter to Ziggy and refresh the Delivery Partner page.",
-      "Paste Alberto's and Bruno's G… addresses into the labelled fields.",
-      "Click Create escrow with Freighter and approve the deployment request.",
-      "Sign the key message, then approve initialization.",
+      "Switch Freighter to Ziggy and refresh the Store Operator page.",
+      "Confirm the escrow says Funded and the product was delivered.",
+      "Click Confirm delivery & release and wait for proof generation.",
     ],
-    expected: "A new contract is selected and its state says Initialized with all three roles.",
+    expected: "The shared escrow state changes from Funded to Released.",
     href: "/escrow/approver",
   },
   {
     id: 5,
-    phase: "Fund",
-    actor: "Alberto",
-    title: "Lock the private payment",
+    phase: "Receive",
+    actor: "Buju B.",
+    title: "Buju B. receives payment",
     summary:
-      "Alberto locks the order payment in escrow. The chain can verify that it is funded without revealing the amount.",
-    action: "Fund milestone",
-    public: ["Payer and escrow addresses", "Funded status"],
-    private: ["Milestone amount", "Remaining payer balance"],
-    mechanics: [
-      "Switch Freighter to Alberto and refresh the Buyer page.",
-      "Enter 25 USDC, no greater than Alberto's Spendable balance.",
-      "Click Lock order payment and wait for proof generation.",
-    ],
-    expected: "Shared escrow state changes from Initialized to Funded.",
-    href: "/escrow/payer",
-  },
-  {
-    id: 6,
-    phase: "Release",
-    actor: "Ziggy",
-    title: "Confirm delivery and release",
-    summary:
-      "After delivering the package, Ziggy confirms delivery and releases the complete private payment to Bruno.",
-    action: "Approve & release",
-    public: ["Approver action", "Receiver address", "Released status"],
-    private: ["Released amount", "Participant balances"],
-    mechanics: [
-      "Switch Freighter to Ziggy and refresh the Delivery Partner page.",
-      "Confirm Shared escrow state says Funded.",
-      "Click Confirm delivery & release and wait for proof generation.",
-    ],
-    expected: "Shared escrow state changes from Funded to Released.",
-    href: "/escrow/approver",
-  },
-  {
-    id: 7,
-    phase: "Collect",
-    actor: "Bruno",
-    title: "Collect Bruno's private payment",
-    summary:
-      "Bruno discovers the incoming confidential USDC and merges it into his spendable private balance.",
-    action: "Collect payment",
+      "Buju B., the boss, discovers the released confidential USDC and merges it into his spendable private balance.",
+    action: "Receive private payment",
     public: ["Receiver address", "Merge transaction"],
-    private: ["Incoming amount", "New spendable balance"],
+    private: ["Incoming amount", "Buju B.'s new spendable balance"],
     mechanics: [
-      "Switch Freighter to Bruno and refresh the Seller page.",
+      "Switch Freighter to Buju B. and refresh the Payment Receiver page.",
       "Connect and sync until Receiving shows the private payment.",
       "Click Make payment spendable and approve the transaction.",
     ],
@@ -151,16 +115,13 @@ const STEPS: Step[] = [
 ];
 
 const actorTone: Record<Step["actor"], string> = {
-  Setup: "bg-amber-400 text-neutral-950",
   Alberto: "bg-orange-500 text-neutral-950",
   Ziggy: "bg-amber-300 text-neutral-950",
-  Bruno: "bg-emerald-500 text-neutral-950",
+  "Buju B.": "bg-emerald-500 text-neutral-950",
 };
 
 export default function EscrowWalkthroughPage() {
   const { active } = useActiveDeployment();
-  const [selected, setSelected] = useState(1);
-  const step = STEPS[selected - 1];
   const escrow = active.contracts.escrow;
 
   return (
@@ -175,7 +136,7 @@ export default function EscrowWalkthroughPage() {
         </div>
         <h1 className="nb-title">A private order, from cart to cash.</h1>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-neutral-400">
-          Alberto buys from Bruno. Ziggy delivers the package and confirms fulfillment. Follow the order story first; open the technical details when you want to see the protocol underneath.
+          Alberto calls Ziggy to place an order. Ziggy initializes the escrow, Alberto funds it, Ziggy delivers the product, and Buju B. receives the payment.
         </p>
         </div>
         <OrderCard compact />
@@ -188,102 +149,59 @@ export default function EscrowWalkthroughPage() {
             <div>
               <p className="text-sm font-black uppercase">Start order #IRIE-001</p>
               <p className="mt-1 text-xs leading-relaxed text-neutral-400">
-                Meet the three characters, prepare Bruno and Alberto, then let Ziggy open the order escrow.
+                Meet the crew, prepare Buju B. and Alberto, then let Ziggy open the order escrow.
               </p>
             </div>
           </div>
         </div>
       )}
 
-      <div className="nb-card-guide mb-4 p-4 text-sm font-bold">
-        Five story chapters: setup → prepare funds → open escrow → lock payment → deliver and collect. The seven numbered actions below expose the exact on-chain operations.
+      <div className="nb-card-guide mb-6 p-4 text-sm font-bold">
+        Open each step in order. Every dropdown explains the story, the wallet to use, and the exact action to complete.
       </div>
-      <section aria-label="Order progress" className="mb-7 overflow-x-auto pb-2">
-        <ol className="flex min-w-[760px] items-start">
-          {STEPS.map((item, index) => {
-            const activeStep = item.id === selected;
-            return (
-              <li key={item.id} className="relative flex flex-1 items-start">
-                {index < STEPS.length - 1 && (
-                  <span className="absolute left-7 right-0 top-4 h-[3px] bg-neutral-800" aria-hidden />
-                )}
-                <button
-                  type="button"
-                  onClick={() => setSelected(item.id)}
-                  aria-current={activeStep ? "step" : undefined}
-                  className="relative z-10 flex w-full flex-col items-start text-left"
-                >
-                  <span
-                    className={`grid h-8 w-8 place-items-center border-2 border-neutral-950 text-xs font-black transition-colors ${
-                      activeStep
-                        ? "bg-orange-500 text-neutral-950 shadow-[2px_2px_0_#151515]"
-                        : "bg-neutral-950 text-neutral-500 hover:bg-amber-300 hover:text-neutral-950"
-                    }`}
-                  >
-                    {item.id}
-                  </span>
-                  <span className={`mt-2 text-xs font-medium ${activeStep ? "text-neutral-100" : "text-neutral-500"}`}>
-                    {item.phase}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ol>
-      </section>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
-        <section className="nb-card p-5 sm:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span className="grid h-9 w-9 place-items-center border-2 border-neutral-950 bg-orange-500 text-sm font-black text-neutral-950 shadow-[2px_2px_0_#151515]">
-                {step.id}
-              </span>
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-neutral-500">{step.phase}</p>
-                <h2 className="text-lg font-semibold">{step.title}</h2>
+        <section aria-label="Order walkthrough" className="space-y-4">
+          {STEPS.map((step) => (
+            <details key={step.id} open={step.id === 1} className="group nb-card overflow-hidden">
+              <summary className="flex cursor-pointer list-none items-center gap-3 p-4 marker:hidden sm:p-5">
+                <span className="grid h-9 w-9 shrink-0 place-items-center border-2 border-neutral-950 bg-orange-500 text-sm font-black text-neutral-950 shadow-[2px_2px_0_#151515]">{step.id}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[10px] font-black uppercase tracking-wider text-neutral-500">{step.phase}</span>
+                  <span className="block font-black uppercase">{step.title}</span>
+                </span>
+                <span className={`hidden rounded-full border-2 border-neutral-950 px-2.5 py-1 text-xs font-black shadow-[2px_2px_0_#151515] sm:inline ${actorTone[step.actor]}`}>{step.actor}</span>
+                <span aria-hidden className="text-xl font-black transition-transform group-open:rotate-45">+</span>
+              </summary>
+              <div className="border-t-[3px] border-neutral-950 p-5 sm:p-6">
+                <p className="text-sm leading-relaxed text-neutral-300">{step.summary}</p>
+                <div className="mt-5 border-l-4 border-neutral-950 bg-amber-300/20 p-4">
+                  <p className="text-xs font-black uppercase tracking-wider text-neutral-500">Do this</p>
+                  <ol className="mt-3 space-y-3">
+                    {step.mechanics.map((item, index) => (
+                      <li key={item} className="flex gap-3 text-sm leading-relaxed text-neutral-300">
+                        <span className="grid h-5 w-5 shrink-0 place-items-center border-2 border-neutral-950 bg-amber-300 text-[10px] font-black text-neutral-950">{index + 1}</span>
+                        {item}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <VisibilityCard title="Visible on-chain" tone="public" items={step.public} />
+                  <VisibilityCard title="Kept confidential" tone="private" items={step.private} />
+                </div>
+                <div className="nb-card-success mt-5 p-3 text-sm"><strong>Success looks like:</strong> {step.expected}</div>
+                {escrow || step.id <= 2 ? (
+                  <Link href={step.href} className="nb-action mt-5 block w-full px-4 py-3 text-center text-sm">{step.action}</Link>
+                ) : (
+                  <button type="button" disabled className="mt-5 w-full cursor-not-allowed rounded-lg bg-neutral-800 px-4 py-3 text-sm font-semibold text-neutral-500">{step.action} — initialize an escrow first</button>
+                )}
               </div>
-            </div>
-            <span className={`rounded-full border-2 border-neutral-950 px-2.5 py-1 text-xs font-black shadow-[2px_2px_0_#151515] ${actorTone[step.actor]}`}>
-              {step.actor}
-            </span>
-          </div>
-
-          <p className="mt-5 text-sm leading-relaxed text-neutral-300">{step.summary}</p>
-
-          <div className="mt-6 border-l-4 border-neutral-950 bg-amber-300/20 p-4">
-            <p className="text-xs font-medium uppercase tracking-wider text-neutral-500">Do this</p>
-            <ol className="mt-3 space-y-3">
-              {step.mechanics.map((item, index) => (
-                <li key={item} className="flex gap-3 text-sm leading-relaxed text-neutral-300">
-                  <span className="grid h-5 w-5 shrink-0 place-items-center border-2 border-neutral-950 bg-amber-300 text-[10px] font-black text-neutral-950">
-                    {index + 1}
-                  </span>
-                  {item}
-                </li>
-              ))}
-            </ol>
-          </div>
-
-          <div className="nb-card-success mt-5 p-3 text-sm">
-            <strong className="font-semibold">Success looks like:</strong> {step.expected}
-          </div>
-
-          {escrow || step.id <= 4 ? (
-            <Link href={step.href} className="nb-action mt-6 block w-full px-4 py-3 text-center text-sm">
-              {step.action}
-            </Link>
-          ) : (
-            <button type="button" disabled className="mt-6 w-full cursor-not-allowed rounded-lg bg-neutral-800 px-4 py-3 text-sm font-semibold text-neutral-500">
-              {step.action} — create an escrow first
-            </button>
-          )}
+            </details>
+          ))}
         </section>
 
         <aside className="space-y-4">
-          <VisibilityCard title="Visible on-chain" tone="public" items={step.public} />
-          <VisibilityCard title="Kept confidential" tone="private" items={step.private} />
-
           <section className="nb-card p-4 text-xs">
             <p className="font-black uppercase">Technical details</p>
             <dl className="mt-3 space-y-2 text-neutral-500">

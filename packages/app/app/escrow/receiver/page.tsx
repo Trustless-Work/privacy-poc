@@ -48,23 +48,23 @@ export default function ReceiverPage() {
 
   const isReceiver = Boolean(wallet && state && wallet.address === state.receiver);
   return (
-    <PageShell title="Bruno collects payment" subtitle="Act as the seller, discover the released confidential USDC, and make it privately spendable.">
-      {!escrowAddress && <ErrorBox className="mb-6">No order escrow is selected. Ziggy must open one before Bruno can collect payment.</ErrorBox>}
+    <PageShell title="Buju B. receives payment" subtitle="Act as the business owner, discover the released confidential USDC, and make it privately spendable." back={{ href: "/escrow", label: "Back to order walkthrough" }}>
+      {!escrowAddress && <ErrorBox className="mb-6">No order escrow is selected. Ziggy must open one before Buju B. can receive payment.</ErrorBox>}
       {error && <ErrorBox className="mb-6">{error}</ErrorBox>}
       <div className="space-y-6">
-        <ActorContext actor="Bruno">Connect Bruno&apos;s Freighter account. The released payment arrives privately in Receiving before it becomes Spendable.</ActorContext>
+        <ActorContext actor="Buju B.">Connect Buju B.&apos;s Freighter account. The released payment arrives privately in Receiving before it becomes Spendable.</ActorContext>
         <BeginnerGuide
-          step="Order action 5 of 5 · collection"
+          step="Order step 5 of 5 · receive"
           title="Collect the private payment"
-          account="Bruno · Seller"
+          account="Buju B. · Boss / Payment receiver"
           before={[
-            "Freighter is on Testnet and Bruno's account is selected.",
-            "Bruno was registered on the Wallet page before the release.",
+            "Freighter is on Testnet and Buju B.'s account is selected.",
+            "Buju B. was registered on the Wallet page before the release.",
             "Shared escrow state says Released.",
           ]}
           actions={[
-            "Connect Bruno's wallet below.",
-            "Confirm the connected G… address matches Bruno in Order escrow state.",
+            "Connect Buju B.'s wallet below.",
+            "Confirm the connected G… address matches Buju B. in Order escrow state.",
             "Sync until Receiving shows the incoming private payment.",
             "Click Make payment spendable and approve the Freighter request.",
           ]}
@@ -72,9 +72,9 @@ export default function ReceiverPage() {
         />
         <AccountSwitchReminder />
         <EscrowStateCard state={state} />
-        {!wallet ? <button onClick={connect} disabled={busy !== null || !escrowAddress} className="rounded bg-emerald-600 px-4 py-2 font-medium hover:bg-emerald-500 disabled:opacity-50">{busy === "connect" ? "Connecting…" : "Connect as Bruno"}</button> : (
+        {!wallet ? <button onClick={connect} disabled={busy !== null || !escrowAddress} className="rounded bg-emerald-600 px-4 py-2 font-medium hover:bg-emerald-500 disabled:opacity-50">{busy === "connect" ? "Connecting…" : "Connect as Buju B."}</button> : (
           <section className="rounded-lg border border-emerald-500/25 bg-emerald-500/5 p-5">
-            <h2 className="font-semibold">Bruno&apos;s private payment</h2>
+            <h2 className="font-semibold">Buju B.&apos;s private payment</h2>
             <dl className="mt-3 grid grid-cols-2 gap-3 text-sm"><div><dt className="text-neutral-500">Receiving</dt><dd className="mt-1 text-lg font-semibold">{view ? stroopsToXlm(view.receiving) : "—"} USDC</dd></div><div><dt className="text-neutral-500">Spendable</dt><dd className="mt-1 text-lg font-semibold">{view ? stroopsToXlm(view.spendable) : "—"} USDC</dd></div></dl>
             {!isReceiver && <p className="mt-3 text-sm text-amber-300">This wallet is not the configured receiver.</p>}
             {isReceiver && !view?.registered && <p className="mt-3 text-sm text-amber-300">Not ready: register this Receiver account on the Wallet page first.</p>}
