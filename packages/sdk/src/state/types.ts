@@ -33,7 +33,7 @@ export interface AccountState {
 
 export function freshState(address: string): AccountState {
   return {
-    cacheVersion: 2,
+    cacheVersion: 3,
     address,
     spendable: { v: 0n, r: 0n },
     receiving: { v: 0n, r: 0n },

@@ -35,10 +35,11 @@ import type { ChainClient } from "../chain/client.js";
 import { type ConfidentialEvent } from "../chain/events.js";
 import { hybridFetchEvents } from "../chain/event-source.js";
 import type { IndexerClient } from "../chain/indexer.js";
+import type { UmbraHistoryClient } from "../chain/umbra-history.js";
 import type { StateStore } from "./store.js";
 import { freshState, type AccountState, type Opening } from "./types.js";
 
-const STATE_CACHE_VERSION = 2;
+const STATE_CACHE_VERSION = 3;
 
 export interface StateEngineConfig {
   client: ChainClient;
@@ -59,6 +60,8 @@ export interface StateEngineConfig {
    * older than retention are unavailable.
    */
   indexer?: IndexerClient;
+  /** Optional account-scoped durable history used to rebuild a stale browser. */
+  accountHistory?: UmbraHistoryClient;
 }
 
 export class StateEngine {
@@ -135,13 +138,30 @@ export class StateEngine {
    */
   async sync(): Promise<AccountState> {
     const prior = await this.cfg.store.load(this.cfg.address);
-    const state = prior ?? freshState(this.cfg.address);
+    let state = prior ?? freshState(this.cfg.address);
     const recoveredIds = new Set<string>();
+
+    // v3 can rebuild an account from Umbra's durable, account-scoped history.
+    // Start from zero so a stale localhost/Vercel cache cannot contaminate the
+    // result. The live RPC tail below is de-duplicated against this backfill.
+    if (this.cfg.accountHistory && (!prior || (state.cacheVersion ?? 1) < STATE_CACHE_VERSION)) {
+      const recovery = await this.cfg.accountHistory.fetchAccountHistory({
+        contractId: this.cfg.client.cfg.contracts.token,
+        address: this.cfg.address,
+        sinceLedger: this.cfg.fromLedger,
+      });
+      state = freshState(this.cfg.address);
+      for (const ev of recovery) {
+        this.apply(state, ev);
+        recoveredIds.add(ev.cursor);
+      }
+      state.cacheVersion = STATE_CACHE_VERSION;
+    }
 
     // v1 ignored escrow-release events entirely. Existing browsers may have a
     // cursor beyond the release, so replay only the newly-supported event type
     // once from deployment history before resuming normal incremental sync.
-    if (prior && (state.cacheVersion ?? 1) < STATE_CACHE_VERSION) {
+    if (!this.cfg.accountHistory && prior && (state.cacheVersion ?? 1) < 2) {
       const recovery = await hybridFetchEvents(this.cfg.client, this.cfg.indexer, {
         fromLedger: this.cfg.fromLedger,
       });

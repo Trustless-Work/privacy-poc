@@ -22,9 +22,18 @@ pnpm build:sdk && pnpm dev   # http://localhost:3000
 
 The confidential `sk` is derived deterministically from a Freighter `signMessage` signature over a deployment-bound message (Ed25519 signatures are deterministic, so the key is recoverable on any device and useless on other deployments), then cached in `localStorage` — a production wallet would store it encrypted.
 
-## Event history & the indexer
+## Event history & recovery
 
-Balances are reconstructed in the browser from chain events and persisted in `localStorage` (the SDK's `StateEngine` — see [State reconstruction & retention](../sdk/README.md#state-reconstruction--retention) for the mechanics and why local persistence is load-bearing). The Soroban RPC only retains ~7 days of history, so the app reads from a hybrid source: RPC for the recent tail, and an optional Goldsky indexer for older history.
+Balances are reconstructed in the browser from chain events and persisted in `localStorage` (the SDK's `StateEngine` — see [State reconstruction & retention](../sdk/README.md#state-reconstruction--retention) for the mechanics). Green Road uses Umbra's account-scoped history to rebuild an account on a new origin or migrate a stale cache, then reads the live tail from Stellar RPC. Every rebuilt opening is checked against the on-chain Pedersen commitment before the wallet can spend it.
+
+The public demo defaults to `https://umbra-production-d30f.up.railway.app`. Override or disable that default in `lib/deployment.ts`, or configure another compatible deployment:
+
+```bash
+# packages/app/.env.local
+NEXT_PUBLIC_UMBRA_URL=https://your-umbra-api.example
+```
+
+The optional Goldsky indexer remains the global full-history source for recipient discovery and old selective-disclosure references:
 
 Point the app at a deployed indexer to get full history:
 
@@ -33,7 +42,7 @@ Point the app at a deployed indexer to get full history:
 NEXT_PUBLIC_INDEXER_URL=https://confidential-token-indexer.<account>.workers.dev
 ```
 
-Unset, the app runs **RPC-only**: events older than the ~7-day window are unavailable, so a fresh client must **sync at least once per retention period** or an aged-out incoming-transfer opening becomes unrecoverable. See [`@ctd/indexer`](../indexer/README.md) to deploy one.
+Without Umbra or Goldsky, the app runs **RPC-only**: events older than the ~7-day window are unavailable, so a fresh client must **sync at least once per retention period** or an aged-out opening becomes unrecoverable. See [`@ctd/indexer`](../indexer/README.md) to deploy the global indexer.
 
 ## Cross-origin isolation
 

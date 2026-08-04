@@ -110,7 +110,7 @@ export class ConfidentialWallet {
     log(`connected ${signer.publicKey}`);
     log(`deployment: ${deployment.label} (token ${truncatePrefix(deployment.contracts.token, 6)})`);
 
-    const { client, indexer } = clientsFor(deployment);
+    const { client, indexer, accountHistory } = clientsFor(deployment);
 
     // Keys are token-bound (addr_f domain separation), so a different deployment
     // derives a different key set and caches under a different localStorage key.
@@ -136,6 +136,7 @@ export class ConfidentialWallet {
     // backfills history older than the RPC's ~7-day window. Without it the app
     // is RPC-only (today's behavior).
     if (indexer) log(`indexer configured (${deployment.indexerUrl})`);
+    if (accountHistory) log(`account recovery configured (${deployment.accountHistoryUrl})`);
 
     // State store is namespaced by token address so separate deployments using
     // the same Freighter account don't corrupt each other's balances. The
@@ -159,6 +160,7 @@ export class ConfidentialWallet {
       // RPC leg to the retention window and routes anything older to the indexer.
       fromLedger: deployment.deployedAtLedger,
       indexer,
+      accountHistory,
     });
 
     return new ConfidentialWallet(

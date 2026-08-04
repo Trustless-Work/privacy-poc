@@ -3,6 +3,7 @@ export * from "./payload.js";
 export * from "./contract.js";
 export * from "./events.js";
 export * from "./indexer.js";
+export * from "./umbra-history.js";
 export * from "./event-source.js";
 export * from "./factory.js";
 export * from "./admin.js";

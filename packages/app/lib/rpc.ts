@@ -4,10 +4,14 @@
  * ChainClient and the same conditional IndexerClient — this is the one place
  * that builds them.
  */
-import { ChainClient, IndexerClient } from "@ctd/sdk";
+import { ChainClient, IndexerClient, UmbraHistoryClient } from "@ctd/sdk";
 import type { Deployment } from "./deployment";
 
-export function clientsFor(deployment: Deployment): { client: ChainClient; indexer?: IndexerClient } {
+export function clientsFor(deployment: Deployment): {
+  client: ChainClient;
+  indexer?: IndexerClient;
+  accountHistory?: UmbraHistoryClient;
+} {
   const client = new ChainClient({
     rpcUrl: deployment.rpcUrl,
     networkPassphrase: deployment.networkPassphrase,
@@ -16,5 +20,8 @@ export function clientsFor(deployment: Deployment): { client: ChainClient; index
   const indexer = deployment.indexerUrl
     ? new IndexerClient({ baseUrl: deployment.indexerUrl })
     : undefined;
-  return { client, indexer };
+  const accountHistory = deployment.accountHistoryUrl
+    ? new UmbraHistoryClient({ baseUrl: deployment.accountHistoryUrl })
+    : undefined;
+  return { client, indexer, accountHistory };
 }

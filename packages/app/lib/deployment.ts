@@ -52,6 +52,8 @@ export interface Deployment {
    * from NEXT_PUBLIC_INDEXER_URL; constant across deployments.
    */
   indexerUrl?: string;
+  /** Account-scoped durable history used to recover private openings cross-browser. */
+  accountHistoryUrl?: string;
   /** Ledger the token was deployed at — the first-sync start point. */
   deployedAtLedger: number;
   /** Every account in this demo registers under this auditor id. */
@@ -68,6 +70,8 @@ export interface Deployment {
 }
 
 const INDEXER_URL = process.env.NEXT_PUBLIC_INDEXER_URL || undefined;
+const ACCOUNT_HISTORY_URL =
+  process.env.NEXT_PUBLIC_UMBRA_URL || "https://umbra-production-d30f.up.railway.app";
 const DEFAULT_XLM_SAC = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
 const POC_TOKEN = process.env.NEXT_PUBLIC_TOKEN_CONTRACT_ID;
 const POC_ESCROW = process.env.NEXT_PUBLIC_ESCROW_CONTRACT_ID; // legacy/fallback instance
@@ -81,6 +85,7 @@ export const DEFAULT_DEPLOYMENT: Deployment = {
   rpcUrl: "https://soroban-testnet.stellar.org",
   networkPassphrase: Networks.TESTNET,
   indexerUrl: INDEXER_URL,
+  accountHistoryUrl: ACCOUNT_HISTORY_URL,
   deployedAtLedger: Number(process.env.NEXT_PUBLIC_DEPLOYED_AT_LEDGER || 3013364),
   auditorId: Number(process.env.NEXT_PUBLIC_AUDITOR_ID || 0),
   auditorSecretHex: process.env.NEXT_PUBLIC_AUDITOR_SECRET_HEX || "0x00c066da47bac8f87cd3eb9a36c37b417ca40cfa2730e7d8eb7f0bf939d11832",
