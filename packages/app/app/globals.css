@@ -215,6 +215,35 @@ body {
     color: color-mix(in srgb, var(--nb-ink) 82%, transparent);
   }
 
+  /* Wallet operation tabs always sit on light semantic colors, including when
+     the surrounding app is in dark mode. Keep their label contrast explicit
+     instead of inheriting the dark theme's white ink. */
+  .nb-wallet-action-tab {
+    border: 2px solid #151515;
+    color: #151515 !important;
+    box-shadow: 2px 2px 0 #151515;
+  }
+
+  .nb-wallet-action-tab--idle {
+    background: #fff !important;
+  }
+
+  .nb-wallet-action-tab--idle:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--nb-guide) 45%, #fff) !important;
+  }
+
+  .nb-wallet-action-tab--deposit {
+    background: var(--nb-guide) !important;
+  }
+
+  .nb-wallet-action-tab--action {
+    background: var(--nb-primary) !important;
+  }
+
+  .nb-wallet-action-tab--merge {
+    background: var(--nb-success) !important;
+  }
+
   .nb-panel-success {
     border: 3px solid var(--nb-ink) !important;
     border-radius: 3px !important;

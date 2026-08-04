@@ -217,6 +217,7 @@ export class ConfidentialWallet {
     const kAudS = await this.client.auditorKey(this.deployment.auditorId);
 
     const s = await this.engine.sync();
+    await this.assertStateMatchesChain();
     if (s.spendable.v < amount) throw new Error(`insufficient spendable balance (${stroopsToXlm(s.spendable.v)} ${this.deployment.assetCode})`);
 
     const w = buildTransferWitness({
@@ -243,6 +244,7 @@ export class ConfidentialWallet {
   async withdraw(amount: bigint, onPhase?: (p: TxPhase) => void): Promise<void> {
     const kAudS = await this.client.auditorKey(this.deployment.auditorId);
     const s = await this.engine.sync();
+    await this.assertStateMatchesChain();
     if (s.spendable.v < amount) throw new Error(`insufficient spendable balance (${stroopsToXlm(s.spendable.v)} ${this.deployment.assetCode})`);
 
     const w = buildWithdrawWitness({ keys: this.keys, v: s.spendable.v, r: s.spendable.r, amount, kAudS });
@@ -269,6 +271,7 @@ export class ConfidentialWallet {
     if (!ownerAccount) throw new Error("payer is not registered");
     const ownerAuditorKey = await this.client.auditorKey(ownerAccount.auditorId);
     const state = await this.engine.sync();
+    await this.assertStateMatchesChain();
     if (state.spendable.v < amount) throw new Error("amount exceeds the payer's spendable balance");
 
     const witness = buildSetSpenderWitness({
@@ -295,6 +298,16 @@ export class ConfidentialWallet {
     );
     await this.engine.setSpendable(witness.next);
     this.log(`escrow funded privately (tx ${truncatePrefix(result.hash)})`);
+  }
+
+  /** Refuse to build a proof from an opening that does not match the contract. */
+  private async assertStateMatchesChain(): Promise<void> {
+    const check = await this.engine.verifyAgainstChain();
+    if (!check.ok) {
+      throw new Error(
+        "private balance state does not match the chain in this browser; use the browser that last changed this account or prepare a fresh Testnet account",
+      );
+    }
   }
 
   /**

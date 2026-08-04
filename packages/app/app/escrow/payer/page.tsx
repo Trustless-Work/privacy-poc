@@ -59,7 +59,10 @@ export default function PayerPage() {
   };
 
   const ready = Boolean(
-    state?.status === "Initialized" && view?.registered && wallet?.address === state.payer,
+    state?.status === "Initialized"
+      && view?.registered
+      && view.matchesChain !== false
+      && wallet?.address === state.payer,
   );
 
   return (
@@ -100,6 +103,13 @@ export default function PayerPage() {
             </p>
             {!view?.registered && <p className="nb-alert mt-3 text-sm">Not ready: open Wallet, register this Payer account, deposit USDC, then merge it.</p>}
             {view?.registered && view.spendable === 0n && <p className="nb-alert mt-3 text-sm">Not ready: Spendable is 0 USDC. Deposit USDC in Wallet and merge the Receiving balance first.</p>}
+            {view?.matchesChain === false && (
+              <p className="nb-alert mt-3 text-sm">
+                Funding is paused because this browser cannot reconstruct Alberto&apos;s latest
+                private balance checkpoint. Open Wallet for recovery guidance; do not generate a
+                funding proof from mismatched state.
+              </p>
+            )}
             {state && wallet.address !== state.payer && <p className="nb-alert mt-3 text-sm">This wallet is not the configured payer.</p>}
             {state?.status !== "Initialized" && <p className="nb-alert mt-3 text-sm">Not ready: escrow status must be Initialized.</p>}
             <div className="mt-4 flex flex-wrap items-end gap-3">

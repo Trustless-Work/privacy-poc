@@ -103,6 +103,13 @@ The confidential-token contract emits events including `register`, `deposit`, `m
 
 The SDK/RPC recovery path decodes `spender_transfer`, credits the Receiver's private `Receiving` balance, and performs a versioned one-time backfill for browser caches that had already advanced past a release. The checked-in Goldsky pipeline does not yet ingest `spender_transfer`; durable indexer support remains a priority.
 
+The upstream confidential token currently emits no owner balance checkpoint for
+`set_spender`. The payer's browser persists that post-funding opening locally,
+but another browser or origin cannot reconstruct it after funding. The app now
+detects this mismatch and blocks proof-carrying balance changes. For the PoC,
+complete a payer journey on one origin or use a fresh Testnet payer; a durable
+fix requires a recoverable funding checkpoint in the token/escrow event model.
+
 The factory also lacks an `escrow_deployed` event. Until that is added, escrow discovery is browser-local rather than globally indexable.
 
 ## Current limitations

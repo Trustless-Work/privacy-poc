@@ -24,7 +24,7 @@ const ACTIONS: Record<
     icon: "↓",
     title: "Deposit",
     hint: "Public underlying asset → your receiving balance.",
-    active: "bg-amber-300 text-neutral-950",
+    active: "nb-wallet-action-tab--deposit",
     panel: "nb-panel-guide",
     btn: "nb-action",
   },
@@ -32,7 +32,7 @@ const ACTIONS: Record<
     icon: "↑",
     title: "Withdraw",
     hint: "Spendable → public underlying asset (to yourself).",
-    active: "bg-orange-500 text-neutral-950",
+    active: "nb-wallet-action-tab--action",
     panel: "nb-panel-action",
     btn: "nb-action",
   },
@@ -40,7 +40,7 @@ const ACTIONS: Record<
     icon: "→",
     title: "Transfer",
     hint: "Send to another registered account's receiving balance — amount stays private.",
-    active: "bg-orange-500 text-neutral-950",
+    active: "nb-wallet-action-tab--action",
     panel: "nb-panel-action",
     btn: "nb-action",
   },
@@ -48,7 +48,7 @@ const ACTIONS: Record<
     icon: "⊕",
     title: "Merge",
     hint: "Fold your receiving balance into spendable.",
-    active: "bg-lime-500 text-neutral-950",
+    active: "nb-wallet-action-tab--merge",
     panel: "nb-panel-success",
     btn: "nb-secondary-action",
   },
@@ -145,6 +145,7 @@ export default function Page() {
   const tabs: ActionTab[] = showMerge
     ? ["deposit", "withdraw", "transfer", "merge"]
     : ["deposit", "withdraw", "transfer"];
+  const stateMismatch = view?.matchesChain === false;
 
   return (
     <PageShell
@@ -248,10 +249,10 @@ export default function Page() {
                   <button
                     key={t}
                     onClick={() => setTab(t)}
-                    className={`relative flex flex-col items-center gap-1 border-2 border-neutral-950 py-2.5 text-sm font-black uppercase shadow-[2px_2px_0_#151515] transition-colors ${
+                    className={`nb-wallet-action-tab relative flex flex-col items-center gap-1 py-2.5 text-sm font-black uppercase transition-colors ${
                       activeTab === t
                         ? ACTIONS[t].active
-                        : "bg-white text-neutral-950 hover:bg-yellow-200"
+                        : "nb-wallet-action-tab--idle"
                     }`}
                   >
                     <span aria-hidden className="text-lg leading-none">
@@ -273,7 +274,7 @@ export default function Page() {
                     <AmountInput value={depositAmt} onChange={setDepositAmt} assetCode={active.assetCode} className="sm:w-36" />
                     <button
                       onClick={run("deposit", (w) => w.deposit(xlmToStroops(depositAmt)))}
-                      disabled={busy !== null}
+                      disabled={busy !== null || stateMismatch}
                       className={`${btnCls} ${ACTIONS.deposit.btn}`}
                     >
                       {busy === "deposit" ? "Submitting tx…" : "Deposit"}
@@ -286,7 +287,7 @@ export default function Page() {
                     <AmountInput value={withdrawAmt} onChange={setWithdrawAmt} assetCode={active.assetCode} className="sm:w-36" />
                     <button
                       onClick={run("withdraw", (w) => w.withdraw(xlmToStroops(withdrawAmt), setPhase))}
-                      disabled={busy !== null}
+                      disabled={busy !== null || stateMismatch}
                       className={`${btnCls} ${ACTIONS.withdraw.btn}`}
                     >
                       {busy === "withdraw" ? phaseLabel(phase) : "Withdraw"}
@@ -304,7 +305,7 @@ export default function Page() {
                     <AmountInput value={transferAmt} onChange={setTransferAmt} assetCode={active.assetCode} className="sm:w-28" />
                     <button
                       onClick={run("transfer", (w) => w.transfer(transferTo, xlmToStroops(transferAmt), setPhase))}
-                      disabled={busy !== null || !transferTo}
+                      disabled={busy !== null || !transferTo || stateMismatch}
                       className={`${btnCls} ${ACTIONS.transfer.btn}`}
                     >
                       {busy === "transfer" ? phaseLabel(phase) : "Send"}
@@ -316,7 +317,7 @@ export default function Page() {
                   <ActionPanel action="merge">
                     <button
                       onClick={run("merge", (w) => w.merge())}
-                      disabled={busy !== null}
+                      disabled={busy !== null || stateMismatch}
                       className={`${btnCls} ${ACTIONS.merge.btn}`}
                     >
                       {busy === "merge" ? "Submitting tx…" : `Merge ${stroopsToXlm(view.receiving)} ${active.assetCode}`}
@@ -459,6 +460,14 @@ function Balances({ view, assetCode }: { view: WalletView | null; assetCode: str
       <p className="nb-copy-muted mt-3 text-xs font-bold">
         {view.registered ? `synced through ledger ${view.syncedLedger}` : "not registered yet"}
       </p>
+      {view.matchesChain === false && (
+        <div className="nb-alert mt-4 text-sm">
+          <strong>Private balance recovery required.</strong> This browser does not have the
+          latest private checkpoint for this account, so balance-changing actions are paused to
+          prevent an invalid proof. Use the browser where this account last funded an escrow, or
+          prepare a fresh Testnet account for this deployment.
+        </div>
+      )}
     </section>
   );
 }

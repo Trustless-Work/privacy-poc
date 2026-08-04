@@ -57,6 +57,7 @@ This is why a previously released escrow can become recoverable after pulling th
 | `Receiving = 0`, `Spendable > 0` | Funds are available privately | Use privately or withdraw |
 | Both `0`, state matches chain | No recoverable balance exists for this account/deployment | Verify Receiver and selected deployment |
 | Both `0`, state mismatch | Local opening and on-chain commitment disagree | Sync and inspect the diagnostic log; do not clear state |
+| Payer matches locally but mismatches on a new domain after funding | `set_spender` changed the spendable commitment without emitting a recoverable owner checkpoint | Return to the browser/origin that funded the escrow, or use a fresh Testnet payer on the new origin; do not generate another proof from the mismatched state |
 
 Freighter displays public asset balances, not the PoC's reconstructed private balances. Merge remains private. Withdraw is the step that returns funds to public USDC.
 
