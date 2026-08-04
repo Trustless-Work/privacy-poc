@@ -19,7 +19,7 @@ type CastMember = {
 
 const CAST: Record<"Alberto" | "Ziggy" | "Buju B.", CastMember> = {
   Alberto: {
-    image: "/characters/alberto-pixel.svg",
+    image: "/characters/alberto.png",
     label: "Customer",
     action: "Places and funds the private order",
   },
