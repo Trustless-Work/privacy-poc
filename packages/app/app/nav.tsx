@@ -259,7 +259,7 @@ export function PersonaNav() {
       <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-3 gap-y-3 px-5 py-3">
         <Link href="/" className="mr-1 flex items-center gap-2">
           <ShieldMark />
-          <span className="hidden text-sm font-black uppercase tracking-tight sm:inline">Irie Market <span className="text-orange-500">/ Private</span></span>
+          <span className="hidden text-sm font-black uppercase tracking-tight sm:inline">Green Road <span className="text-orange-500">/ Private</span></span>
         </Link>
         <span className="flex-1" />
         <DeploymentToggle />

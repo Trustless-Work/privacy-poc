@@ -12,7 +12,7 @@ import { ErrorBox } from "../error-box";
 import { LogPanel } from "../log-panel";
 import { Addr } from "../addr";
 import { AccountSwitchReminder } from "../escrow/guide";
-import { OrderCard } from "../escrow/irie-order";
+import { OrderCard } from "../escrow/green-road-order";
 
 type ActionTab = "deposit" | "withdraw" | "transfer" | "merge";
 

@@ -13,7 +13,7 @@ import { ErrorBox } from "../../error-box";
 import { LogPanel } from "../../log-panel";
 import { EscrowStateCard } from "../escrow-state";
 import { AccountSwitchReminder, BeginnerGuide } from "../guide";
-import { ActorContext } from "../irie-order";
+import { ActorContext } from "../green-road-order";
 
 export default function ReceiverPage() {
   const { active } = useActiveDeployment();

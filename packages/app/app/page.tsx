@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { ServingBadge } from "./serving-badge";
-import { CastCard, OrderCard, PrivacyPath } from "./escrow/irie-order";
+import { CastCard, OrderCard, PrivacyPath } from "./escrow/green-road-order";
 
 export default function LandingPage() {
   return (
     <main className="mx-auto max-w-5xl px-5 py-10 sm:py-16">
       <header className="grid items-center gap-8 lg:grid-cols-[1.08fr_.92fr]">
         <div>
-          <div className="flex flex-wrap items-center gap-3"><span className="nb-kicker">Irie Market · Stellar Testnet</span><ServingBadge /></div>
+          <div className="flex flex-wrap items-center gap-3"><span className="nb-kicker">Green Road · Stellar Testnet</span><ServingBadge /></div>
           <h1 className="mt-6 max-w-[12ch] text-5xl font-black uppercase leading-[.9] tracking-[-.065em] sm:text-7xl">Buy privately. Deliver fairly.</h1>
           <p className="mt-6 max-w-xl text-base font-medium leading-relaxed text-neutral-500">
             Alberto calls Ziggy to order an Irie Oregano Kit. Ziggy opens the escrow and delivers the product; Buju B., the boss, receives the confidential payment.
@@ -44,7 +44,7 @@ export default function LandingPage() {
       </section>
 
       <section className="nb-card-guide mt-14 flex flex-col items-start justify-between gap-5 p-6 sm:flex-row sm:items-center">
-        <div><p className="text-xs font-black uppercase tracking-wider">Ready to place order #{"IRIE-001"}?</p><h2 className="mt-1 text-2xl font-black uppercase">See confidential commerce in action.</h2></div>
+        <div><p className="text-xs font-black uppercase tracking-wider">Ready to place order #{"GR-001"}?</p><h2 className="mt-1 text-2xl font-black uppercase">See confidential commerce in action.</h2></div>
         <Link href="/escrow" className="nb-control shrink-0 bg-white px-6 py-3 text-sm uppercase">Start demo →</Link>
       </section>
     </main>

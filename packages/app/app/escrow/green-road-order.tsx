@@ -1,7 +1,7 @@
 import Link from "next/link";
 
-export const IRIE_ORDER = {
-  id: "IRIE-001",
+export const GREEN_ROAD_ORDER = {
+  id: "GR-001",
   product: "Irie Oregano Kit",
   description: "Caribbean herbs, hot sauce, and recipe cards",
   amount: "25 USDC",
@@ -23,9 +23,9 @@ const CAST: Record<"Alberto" | "Ziggy" | "Buju B.", CastMember> = {
   "Buju B.": { image: "/characters/buju-b.png", label: "Boss · Payment receiver", action: "Receives the private payment" },
 };
 
-export type IrieActor = keyof typeof CAST;
+export type GreenRoadActor = keyof typeof CAST;
 
-export function CastCard({ actor }: { actor: IrieActor }) {
+export function CastCard({ actor }: { actor: GreenRoadActor }) {
   const person = CAST[actor];
   return (
     <article className="nb-card flex items-center gap-3 p-4">
@@ -45,22 +45,22 @@ export function OrderCard({ compact = false }: { compact?: boolean }) {
   return (
     <section className="nb-card overflow-hidden">
       <div className="flex items-center justify-between gap-3 border-b-[3px] border-neutral-950 bg-amber-300 px-4 py-3">
-        <p className="text-xs font-black uppercase tracking-wider">Irie Market order</p>
-        <span className="border-2 border-neutral-950 bg-white px-2 py-0.5 text-[10px] font-black">#{IRIE_ORDER.id}</span>
+        <p className="text-xs font-black uppercase tracking-wider">Green Road order</p>
+        <span className="border-2 border-neutral-950 bg-white px-2 py-0.5 text-[10px] font-black">#{GREEN_ROAD_ORDER.id}</span>
       </div>
       <div className={compact ? "p-4" : "p-5 sm:p-6"}>
         <div className="flex gap-4">
           <span className="grid h-16 w-16 shrink-0 place-items-center border-[3px] border-neutral-950 bg-lime-500 text-3xl shadow-[3px_3px_0_#151515]" aria-hidden>🌿</span>
           <div>
-            <h2 className="text-xl font-black uppercase leading-tight">{IRIE_ORDER.product}</h2>
-            <p className="nb-copy-muted mt-1 text-sm">{IRIE_ORDER.description}</p>
+            <h2 className="text-xl font-black uppercase leading-tight">{GREEN_ROAD_ORDER.product}</h2>
+            <p className="nb-copy-muted mt-1 text-sm">{GREEN_ROAD_ORDER.description}</p>
           </div>
         </div>
         <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 border-t-2 border-neutral-950 pt-4 text-xs sm:grid-cols-4">
-          <OrderFact label="Customer" value={IRIE_ORDER.buyer} />
-          <OrderFact label="Store operator" value={IRIE_ORDER.operator} />
-          <OrderFact label="Payment receiver" value={IRIE_ORDER.receiver} />
-          <OrderFact label="Price" value={`${IRIE_ORDER.amount} · private`} />
+          <OrderFact label="Customer" value={GREEN_ROAD_ORDER.buyer} />
+          <OrderFact label="Store operator" value={GREEN_ROAD_ORDER.operator} />
+          <OrderFact label="Payment receiver" value={GREEN_ROAD_ORDER.receiver} />
+          <OrderFact label="Price" value={`${GREEN_ROAD_ORDER.amount} · private`} />
         </dl>
       </div>
     </section>
@@ -71,7 +71,7 @@ function OrderFact({ label, value }: { label: string; value: string }) {
   return <div><dt className="nb-copy-muted font-bold uppercase">{label}</dt><dd className="mt-1 font-black">{value}</dd></div>;
 }
 
-export function ActorContext({ actor, children }: { actor: IrieActor; children?: React.ReactNode }) {
+export function ActorContext({ actor, children }: { actor: GreenRoadActor; children?: React.ReactNode }) {
   const person = CAST[actor];
   return (
     <section className="nb-card-guide mb-6 flex flex-col justify-between gap-4 p-4 sm:flex-row sm:items-center">

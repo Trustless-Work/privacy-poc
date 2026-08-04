@@ -2,7 +2,7 @@
 
 A Stellar testnet proof of concept for milestone escrow using Confidential Tokens with USDC as the underlying SEP-41 asset.
 
-## Hackathon demo: Irie Market
+## Hackathon demo: Green Road
 
 The application presents the protocol as a privacy-preserving marketplace order. Alberto calls Ziggy to order a 25 USDC **Irie Oregano Kit**. Ziggy initializes the escrow, Alberto funds it, and Ziggy delivers the product. The escrow then releases the private payment to Buju B., the boss, without publishing the order amount or the participants' confidential balances on-chain.
 
@@ -22,7 +22,7 @@ The PoC now demonstrates the complete confidential escrow lifecycle:
 - The Approver releases the complete allowance atomically.
 - The Receiver reconstructs the release from the token's `spender_transfer` event, merges it into private spendable funds, and can withdraw to public USDC.
 - An Auditor can decrypt supported confidential activity with the configured auditor key.
-- A neo-brutalist, scenario-first landing page and guided Irie Market walkthrough are available at `/` and `/escrow`.
+- A neo-brutalist, scenario-first landing page and guided Green Road walkthrough are available at `/` and `/escrow`.
 
 The core research question has been answered positively: an escrow contract can act as an authorized confidential spender and atomically release the complete private allowance to a fixed Receiver without revealing the amount on-chain.
 

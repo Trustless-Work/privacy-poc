@@ -14,7 +14,7 @@ import { ErrorBox } from "../../error-box";
 import { LogPanel } from "../../log-panel";
 import { EscrowStateCard } from "../escrow-state";
 import { AccountSwitchReminder, BeginnerGuide } from "../guide";
-import { ActorContext } from "../irie-order";
+import { ActorContext } from "../green-road-order";
 
 export default function PayerPage() {
   const { active } = useActiveDeployment();
@@ -63,7 +63,7 @@ export default function PayerPage() {
   );
 
   return (
-    <PageShell title="Alberto funds the order" subtitle="Act as the customer and fund order #IRIE-001 without publishing its 25 USDC amount on-chain." back={{ href: "/escrow", label: "Back to order walkthrough" }}>
+    <PageShell title="Alberto funds the order" subtitle="Act as the customer and fund order #GR-001 without publishing its 25 USDC amount on-chain." back={{ href: "/escrow", label: "Back to order walkthrough" }}>
       {!escrowAddress && <ErrorBox className="mb-6">No order escrow is selected. Ask Ziggy to open one first.</ErrorBox>}
       {error && <ErrorBox className="mb-6">{error}</ErrorBox>}
       <div className="space-y-6">

@@ -12,7 +12,7 @@ import { ErrorBox } from "../../error-box";
 import { LogPanel } from "../../log-panel";
 import { EscrowStateCard } from "../escrow-state";
 import { AccountSwitchReminder, BeginnerGuide } from "../guide";
-import { ActorContext } from "../irie-order";
+import { ActorContext } from "../green-road-order";
 
 export default function ApproverPage() {
   const { active, escrows, setActiveEscrow } = useActiveDeployment();
@@ -112,7 +112,7 @@ export default function ApproverPage() {
         {!state ? (
           <BeginnerGuide
             step="Order step 2 of 5"
-            title="Open escrow for order #IRIE-001"
+            title="Open escrow for order #GR-001"
             account="Ziggy · Store operator"
             before={[
               "Freighter is on Testnet and Ziggy's account is selected.",

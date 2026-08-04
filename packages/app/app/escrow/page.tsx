@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActiveDeployment } from "@/lib/active-deployment";
 import { Addr } from "../addr";
-import { OrderCard, PrivacyPath } from "./irie-order";
+import { OrderCard, PrivacyPath } from "./green-road-order";
 
 type Step = {
   id: number;
@@ -129,7 +129,7 @@ export default function EscrowWalkthroughPage() {
       <header className="mb-10 grid items-end gap-6 lg:grid-cols-[1fr_22rem]">
         <div>
         <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
-          <span className="nb-kicker">Irie Market · Order #IRIE-001</span>
+          <span className="nb-kicker">Green Road · Order #GR-001</span>
           <span className="nb-chip px-2.5 py-1">
             Happy path · Private payment · Real contracts
           </span>
@@ -147,7 +147,7 @@ export default function EscrowWalkthroughPage() {
           <div className="flex gap-3">
             <span aria-hidden className="mt-0.5 text-amber-300">●</span>
             <div>
-              <p className="text-sm font-black uppercase">Start order #IRIE-001</p>
+              <p className="text-sm font-black uppercase">Start order #GR-001</p>
               <p className="mt-1 text-xs leading-relaxed">
                 Meet the crew, prepare Buju B. and Alberto, then let Ziggy open the order escrow.
               </p>

@@ -4,7 +4,7 @@ import { PersonaNav } from "./nav";
 import { ActiveDeploymentProvider } from "@/lib/active-deployment";
 
 export const metadata: Metadata = {
-  title: "Irie Market — Private Commerce on Stellar",
+  title: "Green Road — Private Commerce on Stellar",
   description:
     "A privacy-preserving marketplace demo powered by confidential USDC escrow on Stellar Testnet.",
 };
