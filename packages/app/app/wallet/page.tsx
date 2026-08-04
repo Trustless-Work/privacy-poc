@@ -226,7 +226,7 @@ export default function Page() {
             </div>
           )}
 
-          {!view?.registered ? (
+          {view && (!view.registered ? (
             <section className="nb-panel-action">
               <p className="nb-kicker">One-time setup</p>
               <h3 className="nb-panel-title mt-3">Register this private wallet</h3>
@@ -326,7 +326,7 @@ export default function Page() {
                 )}
               </div>
             </section>
-          )}
+          ))}
 
           <EventsPanel wallet={wallet} reloadKey={eventsKey} />
 
@@ -339,9 +339,11 @@ export default function Page() {
           >
             {busy === "refresh"
               ? "Syncing…"
-              : active.indexerUrl
-                ? "Sync events (RPC + indexer)"
-                : "Sync from RPC events"}
+              : active.accountHistoryUrl
+                ? "Sync history (Umbra + RPC)"
+                : active.indexerUrl
+                  ? "Sync events (RPC + indexer)"
+                  : "Sync from RPC events"}
           </button>
         </div>
       )}

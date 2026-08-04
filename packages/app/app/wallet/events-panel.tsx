@@ -59,7 +59,11 @@ export function EventsPanel({ wallet, reloadKey = 0 }: { wallet: ConfidentialWal
         </button>
       </div>
       <p className="nb-copy-muted mb-3 text-xs">
-        Events involving your account ({active.indexerUrl ? "full history via indexer" : "~7-day RPC retention"}).
+        Events involving your account ({active.accountHistoryUrl
+          ? "durable account history via Umbra + live RPC"
+          : active.indexerUrl
+            ? "full history via indexer"
+            : "~7-day RPC retention"}).
         Disclose a transfer to prove its amount to a third party — as its receiver or as its sender.
       </p>
       {error && (

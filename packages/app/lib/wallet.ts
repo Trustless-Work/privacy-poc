@@ -34,7 +34,9 @@ import {
   submitTransfer,
   submitFundEscrow,
   type IndexerClient,
+  type UmbraHistoryClient,
   hybridFetchEvents,
+  dedupeById,
   proveRecipientDisclosure,
   proveSenderDisclosure,
   deriveEphemeralRE,
@@ -101,6 +103,7 @@ export class ConfidentialWallet {
     private client: ChainClient,
     private engine: StateEngine,
     private indexer: IndexerClient | undefined,
+    private accountHistory: UmbraHistoryClient | undefined,
     private log: Log,
   ) {}
 
@@ -171,6 +174,7 @@ export class ConfidentialWallet {
       client,
       engine,
       indexer,
+      accountHistory,
       log,
     );
   }
@@ -349,9 +353,18 @@ export class ConfidentialWallet {
    */
   private async fetchAllEvents(): Promise<ConfidentialEvent[]> {
     if (this.inFlightEvents) return this.inFlightEvents;
-    const fetch = hybridFetchEvents(this.client, this.indexer, {
-      fromLedger: this.deployment.deployedAtLedger,
-    }).then((r) => r.events);
+    const fetch = Promise.all([
+      hybridFetchEvents(this.client, this.indexer, {
+        fromLedger: this.deployment.deployedAtLedger,
+      }).then((r) => r.events),
+      this.accountHistory
+        ? this.accountHistory.fetchAccountHistory({
+            contractId: this.deployment.contracts.token,
+            address: this.address,
+            sinceLedger: this.deployment.deployedAtLedger,
+          })
+        : Promise.resolve([]),
+    ]).then(([globalEvents, accountEvents]) => dedupeById([...accountEvents, ...globalEvents]));
     this.inFlightEvents = fetch;
     try {
       return await fetch;

@@ -20,6 +20,7 @@ import {
 
 import { fromBytesBE } from "../crypto/field.js";
 import { pointFromBytes, type Point } from "../crypto/grumpkin.js";
+import { parseContractErrorCode } from "./errors.js";
 
 /** Source used for read-only simulation; never signs, never pays. */
 const NULL_ACCOUNT = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
@@ -139,8 +140,13 @@ export class ChainClient {
         new Address(address).toScVal(),
       ]);
       return parseAccount(retval);
-    } catch {
-      return null;
+    } catch (error) {
+      // Only the token's explicit "account not registered" error means null.
+      // Propagate RPC, CORS, configuration, and decoding failures so the UI
+      // never offers registration for an account it simply failed to read.
+      const message = error instanceof Error ? error.message : String(error);
+      if (parseContractErrorCode(message) === 3501) return null;
+      throw error;
     }
   }
 

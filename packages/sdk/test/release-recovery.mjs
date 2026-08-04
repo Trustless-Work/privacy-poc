@@ -101,7 +101,7 @@ const engine = new StateEngine({
 });
 
 const recovered = await engine.sync();
-check("v1 cache upgrades to version 2", recovered.cacheVersion === 2);
+check("v1 cache upgrades to the current cache version", recovered.cacheVersion === 3);
 check("historical release credits Receiver exactly once", recovered.receiving.v === allowance);
 check(
   "recovered opening matches the release commitment",
