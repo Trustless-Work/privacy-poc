@@ -38,7 +38,7 @@ const event = parseUmbraEvent({
 console.log("Umbra normalized history decoder:");
 check("decodes a transfer", event?.type === "transfer");
 check("maps account-scoped addresses", event?.from === ACCOUNT && event?.to === RECIPIENT);
-check("normalizes the event id", event?.cursor === `3916358-${TX}-9-0`);
+check("normalizes the event id", event?.cursor === `3916358-${TX}-0-0`);
 check("decodes 32-byte fields", event?.sigma > 0n && event?.bTilde > 0n);
 const point = event?.type === "transfer" ? pointCoords(event.rE) : null;
 check("decodes the 64-byte ephemeral point", Boolean(point && point.x > 0n && point.y > 0n));

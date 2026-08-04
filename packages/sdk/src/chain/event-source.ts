@@ -36,6 +36,7 @@ import {
 } from "./events.js";
 import type { ChainClient } from "./client.js";
 import type { IndexerClient } from "./indexer.js";
+import { pointCoords } from "../crypto/grumpkin.js";
 
 /**
  * Number of ledgers of headroom above the RPC's reported `oldestLedger` at
@@ -48,17 +49,49 @@ import type { IndexerClient } from "./indexer.js";
 const RPC_SEAM_MARGIN = 60;
 
 /**
- * Deduplicate events by their canonical id (`cursor`), preserving input order
- * within a ledger and sorting only by ledger. The caller passes events already
- * in apply order ([indexer-old, …rpc-recent], disjoint ledger ranges), so a
- * STABLE sort by ledger keeps each source's intra-ledger order intact — we do
- * NOT re-sort by id string, which would misorder same-ledger events if the
- * indexer's ids aren't zero-padded. `StateEngine.apply` is order-sensitive
- * (a merge after a deposit in one ledger), so this ordering is load-bearing.
+ * Deduplicate events by both canonical cursor and protocol payload identity,
+ * preserving input order within a ledger and sorting only by ledger. Payload
+ * identity is a defensive cross-source guard: an indexer cursor-format bug
+ * must not make one on-chain event count twice. The caller passes events
+ * already in apply order ([indexer-old, …rpc-recent], disjoint ledger ranges),
+ * so a STABLE sort by ledger keeps each source's intra-ledger order intact — we
+ * do NOT re-sort by id string, which would misorder same-ledger events if the
+ * indexer's ids aren't zero-padded. `StateEngine.apply` is order-sensitive (a
+ * merge after a deposit in one ledger), so this ordering is load-bearing.
  */
+export function eventIdentity(ev: ConfidentialEvent): string {
+  const base = `${ev.ledger}:${ev.txHash}:${ev.type}`;
+  switch (ev.type) {
+    case "register":
+      return `${base}:${ev.account}:${ev.auditorId}`;
+    case "deposit":
+      return `${base}:${ev.from}:${ev.to}:${ev.amount}`;
+    case "merge":
+      return `${base}:${ev.account}`;
+    case "withdraw":
+      return `${base}:${ev.from}:${ev.to}:${ev.amount}:${ev.sigma}:${ev.bTilde}`;
+    case "transfer": {
+      const rE = pointCoords(ev.rE);
+      return `${base}:${ev.from}:${ev.to}:${rE.x}:${rE.y}:${ev.sigma}:${ev.bTilde}:${ev.vTilde}`;
+    }
+    case "spender_transfer": {
+      const rE = pointCoords(ev.rE);
+      return `${base}:${ev.spender}:${ev.from}:${ev.to}:${rE.x}:${rE.y}:${ev.sigmaA}:${ev.vTilde}:${ev.aAudS}`;
+    }
+    default:
+      return `${base}:${ev.account}`;
+  }
+}
+
 export function dedupeById(events: ConfidentialEvent[]): ConfidentialEvent[] {
   const byId = new Map<string, ConfidentialEvent>();
-  for (const ev of events) if (!byId.has(ev.cursor)) byId.set(ev.cursor, ev);
+  const logicalIds = new Set<string>();
+  for (const ev of events) {
+    const logicalId = eventIdentity(ev);
+    if (byId.has(ev.cursor) || logicalIds.has(logicalId)) continue;
+    byId.set(ev.cursor, ev);
+    logicalIds.add(logicalId);
+  }
   // Array.prototype.sort is stable (ES2019+), so equal-ledger events keep their
   // Map insertion order, which is the correctly-ordered source order.
   return [...byId.values()].sort((a, b) => a.ledger - b.ledger);
