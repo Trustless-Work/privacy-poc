@@ -172,6 +172,49 @@ body {
     padding: 1.25rem;
   }
 
+  /* Wallet preparation is instructional, so yellow owns the parent card.
+     Character colors appear as narrow semantic rails instead of unrelated
+     Tailwind pastels, keeping the whole surface inside the product palette. */
+  .nb-wallet-steps {
+    border: 3px solid var(--nb-ink);
+    border-top: 0.75rem solid var(--nb-guide);
+    border-radius: 3px;
+    background: var(--nb-surface);
+    color: var(--nb-ink);
+    box-shadow: var(--nb-shadow);
+    padding: 1.25rem;
+  }
+
+  .nb-wallet-role-card {
+    border: 3px solid var(--nb-ink);
+    border-radius: 2px;
+    background: var(--nb-surface-muted);
+    color: var(--nb-ink);
+    box-shadow: var(--nb-shadow-sm);
+    padding: 1rem 1rem 1rem 1.25rem;
+  }
+
+  .nb-wallet-role-card--customer {
+    border-left: 0.6rem solid var(--nb-primary);
+  }
+
+  .nb-wallet-role-card--receiver {
+    border-left: 0.6rem solid var(--nb-success);
+  }
+
+  .nb-wallet-role-step {
+    border: 2px solid var(--nb-ink);
+    border-radius: 999px;
+    background: var(--nb-guide);
+    color: #151515;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .nb-wallet-role-copy {
+    color: color-mix(in srgb, var(--nb-ink) 82%, transparent);
+  }
+
   .nb-panel-success {
     border: 3px solid var(--nb-ink) !important;
     border-radius: 3px !important;

@@ -153,7 +153,7 @@ export default function Page() {
       back={{ href: "/escrow", label: "Back to order walkthrough" }}
     >
       <div className="mb-6"><OrderCard compact /></div>
-      <section className="nb-panel-guide mb-6">
+      <section className="nb-wallet-steps mb-6">
         <p className="nb-kicker">Order step 1 of 5 · Place order</p>
         <h2 className="mt-4 text-xl font-black uppercase">Which character are you preparing?</h2>
         <p className="nb-copy-muted mt-2 text-sm leading-relaxed">
@@ -361,22 +361,22 @@ function WalletRoleCard({
   items: string[];
   success: string;
 }) {
-  const tone = role.startsWith("Alberto") ? "bg-orange-100" : "bg-lime-100";
+  const tone = role.startsWith("Alberto") ? "nb-wallet-role-card--customer" : "nb-wallet-role-card--receiver";
   return (
-    <div className={`border-[3px] border-neutral-950 p-4 text-neutral-950 shadow-[4px_4px_0_#151515] ${tone}`}>
+    <div className={`nb-wallet-role-card ${tone}`}>
       <div className="flex items-center justify-between gap-3">
         <h3 className="font-black uppercase">{role}</h3>
-        <span className="nb-chip px-2 py-0.5 text-[10px]">{step}</span>
+        <span className="nb-wallet-role-step px-2 py-0.5 text-[10px]">{step}</span>
       </div>
       <ol className="mt-3 space-y-2">
         {items.map((item, index) => (
-          <li key={item} className="flex gap-2 text-xs font-medium leading-relaxed text-neutral-800">
+          <li key={item} className="nb-wallet-role-copy flex gap-2 text-xs font-medium leading-relaxed">
             <span className="font-black">{index + 1}.</span>
             <span>{item}</span>
           </li>
         ))}
       </ol>
-      <p className="mt-3 border-t-2 border-neutral-950 pt-3 text-xs">
+      <p className="mt-3 border-t-2 border-[var(--nb-ink)] pt-3 text-xs">
         <strong>Done when:</strong> {success}
       </p>
     </div>
