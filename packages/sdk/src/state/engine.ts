@@ -82,6 +82,68 @@ export class StateEngine {
     return { v, r };
   }
 
+  /**
+   * Reveal payment amounts to the owner by replaying their ciphertext history.
+   * Outgoing amounts are derived from consecutive spendable openings, which
+   * also covers set-spender rows normalized by an indexer as transfers.
+   */
+  discloseHistoryAmounts(events: ConfidentialEvent[]): Map<string, bigint> {
+    const amounts = new Map<string, bigint>();
+    let spendable = 0n;
+    let receiving = 0n;
+    let hasOpening = false;
+    const ordered = [...events].sort((a, b) => a.ledger - b.ledger || a.cursor.localeCompare(b.cursor));
+
+    for (const ev of ordered) {
+      switch (ev.type) {
+        case "register":
+          if (ev.account === this.cfg.address) {
+            spendable = 0n;
+            receiving = 0n;
+            hasOpening = true;
+          }
+          break;
+        case "deposit":
+          if (ev.to === this.cfg.address && hasOpening) receiving += ev.amount;
+          break;
+        case "merge":
+          if (ev.account === this.cfg.address && hasOpening) {
+            spendable += receiving;
+            receiving = 0n;
+          }
+          break;
+        case "withdraw":
+          if (ev.from === this.cfg.address) {
+            spendable = this.openSpendable(ev.bTilde, ev.sigma).v;
+            hasOpening = true;
+          }
+          break;
+        case "transfer": {
+          if (ev.from === this.cfg.address) {
+            const next = this.openSpendable(ev.bTilde, ev.sigma).v;
+            if (hasOpening && next <= spendable) amounts.set(ev.cursor, spendable - next);
+            spendable = next;
+            hasOpening = true;
+          }
+          if (ev.to === this.cfg.address) {
+            const incoming = this.decryptIncoming(ev.rE, ev.vTilde, ev.sigma).vTx;
+            amounts.set(ev.cursor, incoming);
+            if (hasOpening) receiving += incoming;
+          }
+          break;
+        }
+        case "spender_transfer":
+          if (ev.to === this.cfg.address) {
+            const incoming = this.decryptIncoming(ev.rE, ev.vTilde, ev.sigmaA).vTx;
+            amounts.set(ev.cursor, incoming);
+            if (hasOpening) receiving += incoming;
+          }
+          break;
+      }
+    }
+    return amounts;
+  }
+
   /** Apply one event in-place to `state`. */
   private apply(state: AccountState, ev: ConfidentialEvent): void {
     const me = state.address;
@@ -141,10 +203,12 @@ export class StateEngine {
     let state = prior ?? freshState(this.cfg.address);
     const recoveredIds = new Set<string>();
 
-    // v3 can rebuild an account from Umbra's durable, account-scoped history.
-    // Start from zero so a stale localhost/Vercel cache cannot contaminate the
-    // result. The live RPC tail below is de-duplicated against this backfill.
-    if (this.cfg.accountHistory && (!prior || (state.cacheVersion ?? 1) < STATE_CACHE_VERSION)) {
+    // Umbra is the durable source of the owner's encrypted history. Replay it
+    // on every sync rather than treating it as a one-time cache migration: a
+    // browser may have persisted a stale/partial opening after an earlier
+    // indexer failure. The live RPC tail below is de-duplicated against this
+    // backfill, so rebuilding remains deterministic and current.
+    if (this.cfg.accountHistory) {
       const recovery = await this.cfg.accountHistory.fetchAccountHistory({
         contractId: this.cfg.client.cfg.contracts.token,
         address: this.cfg.address,
