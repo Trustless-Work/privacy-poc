@@ -33,7 +33,7 @@ export function TxLink({
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className={`inline-flex items-center gap-1 font-mono text-xs text-neutral-400 hover:text-neutral-200 ${className}`}
+          className={`inline-flex items-center gap-1 font-mono text-xs font-bold text-neutral-700 underline decoration-2 underline-offset-2 hover:text-orange-600 ${className}`}
         >
           {truncateMiddle(hash)}
           <span aria-hidden>↗</span>
@@ -49,7 +49,7 @@ export function TxLink({
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className={`font-mono underline decoration-dotted underline-offset-2 hover:text-neutral-200 ${className}`}
+        className={`font-mono font-bold underline decoration-2 underline-offset-2 hover:text-orange-600 ${className}`}
       >
         {full ? hash : truncatePrefix(hash)}
       </a>

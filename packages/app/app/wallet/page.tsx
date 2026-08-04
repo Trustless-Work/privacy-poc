@@ -16,43 +16,41 @@ import { OrderCard } from "../escrow/irie-order";
 
 type ActionTab = "deposit" | "withdraw" | "transfer" | "merge";
 
-// Per-action visual identity. Colors match the activity-panel badges
-// (deposit = sky, withdraw = amber); classes are literal so Tailwind sees them.
 const ACTIONS: Record<
   ActionTab,
-  { icon: string; title: string; hint: string; card: string; panel: string; btn: string }
+  { icon: string; title: string; hint: string; active: string; panel: string; btn: string }
 > = {
   deposit: {
     icon: "↓",
     title: "Deposit",
     hint: "Public underlying asset → your receiving balance.",
-    card: "border-sky-500/60 bg-sky-500/15 text-sky-300",
-    panel: "border-sky-500/30 bg-sky-500/5",
-    btn: "bg-sky-600 hover:bg-sky-500",
+    active: "bg-amber-300 text-neutral-950",
+    panel: "nb-panel-guide",
+    btn: "nb-action",
   },
   withdraw: {
     icon: "↑",
     title: "Withdraw",
     hint: "Spendable → public underlying asset (to yourself).",
-    card: "border-amber-500/60 bg-amber-500/15 text-amber-300",
-    panel: "border-amber-500/30 bg-amber-500/5",
-    btn: "bg-amber-600 hover:bg-amber-500",
+    active: "bg-orange-500 text-neutral-950",
+    panel: "nb-panel-action",
+    btn: "nb-action",
   },
   transfer: {
     icon: "→",
     title: "Transfer",
     hint: "Send to another registered account's receiving balance — amount stays private.",
-    card: "border-violet-500/60 bg-violet-500/15 text-violet-300",
-    panel: "border-violet-500/30 bg-violet-500/5",
-    btn: "bg-violet-600 hover:bg-violet-500",
+    active: "bg-orange-500 text-neutral-950",
+    panel: "nb-panel-action",
+    btn: "nb-action",
   },
   merge: {
     icon: "⊕",
     title: "Merge",
     hint: "Fold your receiving balance into spendable.",
-    card: "border-emerald-500/60 bg-emerald-500/15 text-emerald-300",
-    panel: "border-emerald-500/30 bg-emerald-500/5",
-    btn: "bg-emerald-600 hover:bg-emerald-500",
+    active: "bg-lime-500 text-neutral-950",
+    panel: "nb-panel-success",
+    btn: "nb-secondary-action",
   },
 };
 
@@ -69,7 +67,7 @@ export default function Page() {
   const [mergeNotice, setMergeNotice] = useState<"incoming" | "deposit" | null>(null);
   const [eventsKey, setEventsKey] = useState(0);
 
-  const [depositAmt, setDepositAmt] = useState("10");
+  const [depositAmt, setDepositAmt] = useState("25");
   const [transferTo, setTransferTo] = useState("");
   const [transferAmt, setTransferAmt] = useState("40");
   const [withdrawAmt, setWithdrawAmt] = useState("40");
@@ -155,10 +153,10 @@ export default function Page() {
       back={{ href: "/escrow", label: "Back to order walkthrough" }}
     >
       <div className="mb-6"><OrderCard compact /></div>
-      <section className="mb-6 rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-5">
-        <p className="text-xs font-semibold uppercase tracking-wider text-indigo-300">Order step 1 of 5 · Place order</p>
-        <h2 className="mt-1 text-lg font-semibold">Which character are you preparing?</h2>
-        <p className="mt-2 text-sm leading-relaxed text-neutral-400">
+      <section className="nb-panel-guide mb-6">
+        <p className="nb-kicker">Order step 1 of 5 · Place order</p>
+        <h2 className="mt-4 text-xl font-black uppercase">Which character are you preparing?</h2>
+        <p className="nb-copy-muted mt-2 text-sm leading-relaxed">
           Buju B. only needs registration to receive. Alberto registers, deposits, and merges enough private USDC for the order.
         </p>
         <div className="mt-5 grid gap-4 md:grid-cols-2">
@@ -194,7 +192,7 @@ export default function Page() {
         <button
           onClick={connect}
           disabled={busy !== null}
-          className="rounded bg-indigo-600 px-4 py-2 font-medium hover:bg-indigo-500 disabled:opacity-50"
+          className="nb-action px-5 py-3 disabled:opacity-50"
         >
           {busy === "connecting" ? "Connecting…" : "Connect Freighter"}
         </button>
@@ -203,7 +201,7 @@ export default function Page() {
           <Balances view={view} assetCode={active.assetCode} />
 
           {view?.registered && mergeNotice && showMerge && (
-            <div className="flex items-center justify-between gap-3 rounded border border-amber-700 bg-amber-950/40 p-3 text-sm text-amber-300">
+            <div className="nb-alert flex flex-col justify-between gap-3 text-sm sm:flex-row sm:items-center">
               <span>
                 {mergeNotice === "deposit"
                   ? `Deposit landed in your receiving balance (${stroopsToXlm(view.receiving)} ${active.assetCode}). Merge it before you can transfer or withdraw.`
@@ -212,13 +210,13 @@ export default function Page() {
               <div className="flex shrink-0 gap-2">
                 <button
                   onClick={() => setTab("merge")}
-                  className="rounded bg-amber-700 px-3 py-1 font-medium text-amber-100 hover:bg-amber-600"
+                  className="nb-secondary-action px-3 py-1.5 text-xs"
                 >
                   Go to merge
                 </button>
                 <button
                   onClick={() => setMergeNotice(null)}
-                  className="rounded px-2 py-1 text-amber-400 hover:text-amber-200"
+                  className="nb-control px-2 py-1 text-xs"
                   aria-label="Dismiss"
                 >
                   ✕
@@ -228,31 +226,32 @@ export default function Page() {
           )}
 
           {!view?.registered ? (
-            <section className="rounded border border-neutral-800 p-4">
-              <h3 className="font-medium">Register</h3>
-              <p className="mb-3 mt-0.5 text-xs text-neutral-400">
+            <section className="nb-panel-action">
+              <p className="nb-kicker">One-time setup</p>
+              <h3 className="nb-panel-title mt-3">Register this private wallet</h3>
+              <p className="nb-copy-muted mb-4 mt-1 text-xs">
                 Bind your confidential keys to the contract (one-time). All other actions unlock
                 once you&apos;re registered.
               </p>
               <button
                 onClick={run("register", (w) => w.register(setPhase))}
                 disabled={busy !== null}
-                className="rounded bg-indigo-600 px-4 py-2 font-medium hover:bg-indigo-500 disabled:opacity-50"
+                className="nb-action px-4 py-2 disabled:opacity-50"
               >
                 {busy === "register" ? phaseLabel(phase) : "Register"}
               </button>
             </section>
           ) : (
-            <section className="rounded border border-neutral-800">
-              <div className="flex gap-2 border-b border-neutral-800 bg-neutral-900/40 p-3">
+            <section className="nb-panel p-0">
+              <div className="grid grid-cols-2 gap-2 border-b-[3px] border-neutral-950 bg-amber-300 p-3 sm:grid-cols-4">
                 {tabs.map((t) => (
                   <button
                     key={t}
                     onClick={() => setTab(t)}
-                    className={`relative flex flex-1 flex-col items-center gap-1 rounded-md border py-2.5 text-sm font-medium transition-colors ${
+                    className={`relative flex flex-col items-center gap-1 border-2 border-neutral-950 py-2.5 text-sm font-black uppercase shadow-[2px_2px_0_#151515] transition-colors ${
                       activeTab === t
-                        ? ACTIONS[t].card
-                        : "border-neutral-800 bg-neutral-900/60 text-neutral-500 hover:border-neutral-700 hover:text-neutral-300"
+                        ? ACTIONS[t].active
+                        : "bg-white text-neutral-950 hover:bg-yellow-200"
                     }`}
                   >
                     <span aria-hidden className="text-lg leading-none">
@@ -260,7 +259,7 @@ export default function Page() {
                     </span>
                     {ACTIONS[t].title}
                     {t === "merge" && (
-                      <span className="absolute right-1.5 top-1.5 rounded-full bg-emerald-500/20 px-1.5 text-[10px] leading-4 text-emerald-300">
+                      <span className="absolute right-1.5 top-1.5 border border-neutral-950 bg-lime-500 px-1.5 text-[10px] leading-4 text-neutral-950">
                         {stroopsToXlm(view.receiving)}
                       </span>
                     )}
@@ -268,7 +267,7 @@ export default function Page() {
                 ))}
               </div>
 
-              <div className="p-4">
+              <div className="p-4 sm:p-5">
                 {activeTab === "deposit" && (
                   <ActionPanel action="deposit">
                     <AmountInput value={depositAmt} onChange={setDepositAmt} assetCode={active.assetCode} className="sm:w-36" />
@@ -335,7 +334,7 @@ export default function Page() {
               void loadRecipients(w);
             })}
             disabled={busy !== null}
-            className="text-sm text-neutral-400 underline hover:text-neutral-200 disabled:opacity-50"
+            className="nb-control px-4 py-2 text-sm disabled:opacity-50"
           >
             {busy === "refresh"
               ? "Syncing…"
@@ -362,32 +361,29 @@ function WalletRoleCard({
   items: string[];
   success: string;
 }) {
-  const tone = role.startsWith("Alberto")
-    ? "border-sky-500/25 bg-sky-500/5 text-sky-200"
-    : "border-emerald-500/25 bg-emerald-500/5 text-emerald-200";
+  const tone = role.startsWith("Alberto") ? "bg-orange-100" : "bg-lime-100";
   return (
-    <div className={`rounded-lg border p-4 ${tone}`}>
+    <div className={`border-[3px] border-neutral-950 p-4 text-neutral-950 shadow-[4px_4px_0_#151515] ${tone}`}>
       <div className="flex items-center justify-between gap-3">
-        <h3 className="font-semibold">{role}</h3>
-        <span className="text-xs opacity-80">{step}</span>
+        <h3 className="font-black uppercase">{role}</h3>
+        <span className="nb-chip px-2 py-0.5 text-[10px]">{step}</span>
       </div>
       <ol className="mt-3 space-y-2">
         {items.map((item, index) => (
-          <li key={item} className="flex gap-2 text-xs leading-relaxed text-neutral-300">
-            <span className="font-semibold text-current">{index + 1}.</span>
+          <li key={item} className="flex gap-2 text-xs font-medium leading-relaxed text-neutral-800">
+            <span className="font-black">{index + 1}.</span>
             <span>{item}</span>
           </li>
         ))}
       </ol>
-      <p className="mt-3 border-t border-white/10 pt-3 text-xs">
+      <p className="mt-3 border-t-2 border-neutral-950 pt-3 text-xs">
         <strong>Done when:</strong> {success}
       </p>
     </div>
   );
 }
-const inputCls =
-  "rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-indigo-500";
-const btnCls = "rounded px-4 py-2 text-sm font-medium disabled:opacity-50";
+const inputCls = "nb-field mt-0 px-3 py-2 text-sm outline-none";
+const btnCls = "px-4 py-2 text-sm disabled:opacity-50";
 
 function phaseLabel(phase: TxPhase | null): string {
   if (phase === "submitting") return "Submitting tx…";
@@ -432,8 +428,8 @@ function RecipientSelect(props: {
 function ActionPanel(props: { action: ActionTab; children: React.ReactNode }) {
   const meta = ACTIONS[props.action];
   return (
-    <div className={`rounded-md border p-4 ${meta.panel}`}>
-      <p className="mb-3 text-xs text-neutral-400">{meta.hint}</p>
+    <div className={meta.panel}>
+      <p className="nb-copy-muted mb-3 text-xs font-bold">{meta.hint}</p>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">{props.children}</div>
     </div>
   );
@@ -442,13 +438,13 @@ function ActionPanel(props: { action: ActionTab; children: React.ReactNode }) {
 function Balances({ view, assetCode }: { view: WalletView | null; assetCode: string }) {
   if (!view) return null;
   return (
-    <section className="rounded border border-neutral-800 p-4">
+    <section className="nb-panel">
       <div className="mb-3 flex items-center justify-between">
-        <Addr value={view.address} full className="text-sm text-neutral-400" />
+        <Addr value={view.address} full className="nb-copy-muted text-sm" />
         {view.matchesChain !== null && (
           <span
-            className={`rounded px-2 py-0.5 text-xs ${
-              view.matchesChain ? "bg-emerald-900 text-emerald-300" : "bg-red-900 text-red-300"
+            className={`border-2 border-neutral-950 px-2 py-0.5 text-xs font-black uppercase shadow-[2px_2px_0_#151515] ${
+              view.matchesChain ? "bg-lime-500 text-neutral-950" : "bg-red-500 text-white"
             }`}
             title="Local reconstruction re-committed and compared to on-chain commitments"
           >
@@ -460,7 +456,7 @@ function Balances({ view, assetCode }: { view: WalletView | null; assetCode: str
         <Stat label="Spendable" value={stroopsToXlm(view.spendable)} assetCode={assetCode} />
         <Stat label="Receiving" value={stroopsToXlm(view.receiving)} assetCode={assetCode} />
       </div>
-      <p className="mt-3 text-xs text-neutral-500">
+      <p className="nb-copy-muted mt-3 text-xs font-bold">
         {view.registered ? `synced through ledger ${view.syncedLedger}` : "not registered yet"}
       </p>
     </section>
@@ -469,10 +465,10 @@ function Balances({ view, assetCode }: { view: WalletView | null; assetCode: str
 
 function Stat({ label, value, assetCode }: { label: string; value: string; assetCode: string }) {
   return (
-    <div>
-      <div className="text-xs uppercase tracking-wide text-neutral-500">{label}</div>
-      <div className="text-2xl">
-        {value} <span className="text-sm text-neutral-500">{assetCode}</span>
+    <div className="nb-stat">
+      <div className="nb-field-label">{label}</div>
+      <div className="mt-1 text-2xl font-black">
+        {value} <span className="nb-copy-muted text-sm">{assetCode}</span>
       </div>
     </div>
   );
@@ -498,7 +494,7 @@ function AmountInput({
         inputMode="decimal"
         onChange={(e) => onChange(e.target.value)}
       />
-      <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-neutral-500">
+      <span className="nb-copy-muted pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-black">
         {assetCode}
       </span>
     </div>

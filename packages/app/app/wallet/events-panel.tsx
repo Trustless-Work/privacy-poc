@@ -47,18 +47,18 @@ export function EventsPanel({ wallet, reloadKey = 0 }: { wallet: ConfidentialWal
   }, [load, reloadKey]);
 
   return (
-    <section className="rounded border border-neutral-800 p-4">
+    <section className="nb-panel">
       <div className="mb-1 flex items-center justify-between">
-        <h3 className="font-medium">Your activity</h3>
+        <h3 className="nb-panel-title">Your private wallet activity</h3>
         <button
           onClick={load}
           disabled={busy}
-          className="rounded bg-neutral-800 px-3 py-1.5 text-sm font-medium hover:bg-neutral-700 disabled:opacity-50"
+          className="nb-secondary-action px-3 py-1.5 text-sm disabled:opacity-50"
         >
           {busy ? "Loading…" : "Reload"}
         </button>
       </div>
-      <p className="mb-3 text-xs text-neutral-400">
+      <p className="nb-copy-muted mb-3 text-xs">
         Events involving your account ({active.indexerUrl ? "full history via indexer" : "~7-day RPC retention"}).
         Disclose a transfer to prove its amount to a third party — as its receiver or as its sender.
       </p>
@@ -68,9 +68,9 @@ export function EventsPanel({ wallet, reloadKey = 0 }: { wallet: ConfidentialWal
         </ErrorBox>
       )}
       {events && events.length === 0 && (
-        <p className="text-sm text-neutral-500">No activity in the retention window.</p>
+        <p className="nb-alert text-sm">No activity in the retention window.</p>
       )}
-      {!events && busy && <p className="text-sm text-neutral-500">Loading events…</p>}
+      {!events && busy && <p className="nb-copy-muted text-sm font-bold">Loading events…</p>}
       {events && (
         <ul className="space-y-2">
           {events.map((ev) => (
@@ -113,7 +113,7 @@ function EventRow({ ev, wallet, assetCode }: { ev: ConfidentialEvent; wallet: Co
   }, [ev, wallet]);
 
   return (
-    <li className="rounded border border-neutral-900 bg-neutral-500/10 p-3">
+    <li className="border-2 border-neutral-950 bg-white p-3 text-neutral-950 shadow-[2px_2px_0_#151515]">
       <div className="flex flex-wrap items-center gap-2">
         <span className={`rounded px-2 py-0.5 text-xs font-medium ${badgeCls(ev.type, direction)}`}>
           {direction ?? ev.type}
@@ -122,7 +122,7 @@ function EventRow({ ev, wallet, assetCode }: { ev: ConfidentialEvent; wallet: Co
         {direction && canDisclose && (
           <button
             onClick={() => setShowDisclose((v) => !v)}
-            className="rounded bg-indigo-900/70 px-2 py-1 text-xs font-medium text-indigo-200 hover:bg-indigo-800"
+            className="nb-secondary-action px-2 py-1 text-xs"
           >
             {showDisclose ? "Close disclosure" : "Disclose amount"}
           </button>
@@ -137,7 +137,7 @@ function EventRow({ ev, wallet, assetCode }: { ev: ConfidentialEvent; wallet: Co
           </span>
         )}
       </div>
-      <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-neutral-400">
+      <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-neutral-700">
         {summary(ev, wallet.address, isPayment ? amt : undefined, assetCode)}
       </div>
       {showDisclose && direction && (
@@ -181,8 +181,8 @@ function DiscloseFlow({
   }, [requestJson, ev, direction, wallet]);
 
   return (
-    <div className="mt-3 space-y-2 rounded border border-indigo-900/60 bg-indigo-950/20 p-3">
-      <p className="text-xs text-neutral-400">
+    <div className="nb-panel-guide mt-3 space-y-3 p-3">
+      <p className="text-xs font-medium text-neutral-800">
         {direction === "received"
           ? "Prove this transfer paid you its exact amount."
           : "Prove you sent this transfer and what it paid the recipient."}{" "}
@@ -190,7 +190,7 @@ function DiscloseFlow({
         and one-time nonce <code>nu</code>). The proof binds to that pair — it is useless to anyone else.
       </p>
       <textarea
-        className="h-24 w-full rounded border border-neutral-700 bg-neutral-900 p-2 font-mono text-xs outline-none focus:border-indigo-600"
+        className="nb-field h-24 p-2 font-mono text-xs outline-none"
         placeholder='{"pR":{"x":"0x…","y":"0x…"},"nu":"0x…"}'
         value={requestJson}
         onChange={(e) => setRequestJson(e.target.value)}
@@ -198,7 +198,7 @@ function DiscloseFlow({
       <button
         onClick={generate}
         disabled={busy || !requestJson.trim()}
-        className="rounded bg-indigo-700 px-3 py-1.5 text-sm font-medium hover:bg-indigo-600 disabled:opacity-50"
+        className="nb-action px-3 py-1.5 text-sm disabled:opacity-50"
       >
         {busy ? "Proving…" : "Generate disclosure proof"}
       </button>
@@ -207,11 +207,11 @@ function DiscloseFlow({
         <div className="space-y-2">
           <textarea
             readOnly
-            className="h-32 w-full rounded border border-neutral-800 bg-neutral-500/10 p-2 font-mono text-xs text-neutral-300"
+            className="nb-field h-32 p-2 font-mono text-xs"
             value={bundleJson}
           />
           <CopyButton label="Copy bundle" payload={() => bundleJson} />
-          <p className="text-xs text-neutral-500">
+          <p className="text-xs font-medium text-neutral-700">
             Send this bundle back to the requester over your usual channel — it never touches the chain.
           </p>
         </div>
@@ -240,14 +240,14 @@ function Amt({ children, title }: { children: React.ReactNode; title?: string })
   return (
     <span
       title={title}
-      className="rounded bg-neutral-700/70 px-1.5 py-0.5 font-mono text-xs font-semibold text-neutral-100"
+      className="border border-neutral-950 bg-amber-300 px-1.5 py-0.5 font-mono text-xs font-black text-neutral-950"
     >
       {children}
     </span>
   );
 }
 
-const You = () => <span className="font-medium text-neutral-200">you</span>;
+const You = () => <span className="font-black text-neutral-950">you</span>;
 const Muted = ({ children }: { children: React.ReactNode }) => (
   <span className="text-neutral-500">{children}</span>
 );
@@ -270,7 +270,7 @@ function summary(
   transferAmt?: { loading: boolean; value: bigint | null },
   assetCode = "XLM",
 ) {
-  const who = (a: string) => (a === me ? <You /> : <Addr value={a} className="text-neutral-200" />);
+  const who = (a: string) => (a === me ? <You /> : <Addr value={a} className="font-bold text-neutral-800" />);
   switch (ev.type) {
     case "register":
       return (
@@ -298,14 +298,14 @@ function summary(
       const amt = transferAmt ?? { loading: false, value: null };
       return ev.to === me ? (
         <>
-          <span className="font-medium text-emerald-300">from</span> {who(ev.from)}{" "}
-          <span className="text-neutral-600">·</span> <TransferAmount amt={amt} assetCode={assetCode} />
+          <span className="font-black text-green-700">from</span> {who(ev.from)}{" "}
+          <span className="text-neutral-500">·</span> <TransferAmount amt={amt} assetCode={assetCode} />
           <Muted>(confidential)</Muted>
         </>
       ) : (
         <>
-          <span className="font-medium text-orange-300">to</span> {who(ev.to)}{" "}
-          <span className="text-neutral-600">·</span> <TransferAmount amt={amt} assetCode={assetCode} />
+          <span className="font-black text-orange-600">to</span> {who(ev.to)}{" "}
+          <span className="text-neutral-500">·</span> <TransferAmount amt={amt} assetCode={assetCode} />
           <Muted>(confidential)</Muted>
         </>
       );
@@ -314,13 +314,13 @@ function summary(
       const amt = transferAmt ?? { loading: false, value: null };
       return ev.to === me ? (
         <>
-          <span className="font-medium text-emerald-300">escrow release from</span> {who(ev.from)}{" "}
-          <span className="text-neutral-600">·</span> <TransferAmount amt={amt} assetCode={assetCode} />
+          <span className="font-black text-green-700">escrow release from</span> {who(ev.from)}{" "}
+          <span className="text-neutral-500">·</span> <TransferAmount amt={amt} assetCode={assetCode} />
           <Muted>(confidential)</Muted>
         </>
       ) : (
         <>
-          <span className="font-medium text-orange-300">escrow released to</span> {who(ev.to)}
+          <span className="font-black text-orange-600">escrow released to</span> {who(ev.to)}
         </>
       );
     }
@@ -331,18 +331,18 @@ function summary(
 }
 
 function badgeCls(type: ConfidentialEvent["type"], direction: Direction): string {
-  if (direction === "received") return "bg-emerald-900 text-emerald-300";
-  if (direction === "sent") return "bg-orange-900 text-orange-300";
+  if (direction === "received") return "border border-neutral-950 bg-lime-500 text-neutral-950";
+  if (direction === "sent") return "border border-neutral-950 bg-orange-500 text-neutral-950";
   switch (type) {
     case "deposit":
-      return "bg-sky-900 text-sky-300";
+      return "border border-neutral-950 bg-yellow-300 text-neutral-950";
     case "withdraw":
-      return "bg-amber-900 text-amber-300";
+      return "border border-neutral-950 bg-orange-500 text-neutral-950";
     case "register":
-      return "bg-purple-900 text-purple-300";
+      return "border border-neutral-950 bg-amber-300 text-neutral-950";
     case "merge":
-      return "bg-emerald-900 text-emerald-300";
+      return "border border-neutral-950 bg-lime-500 text-neutral-950";
     default:
-      return "bg-neutral-800 text-neutral-300";
+      return "border border-neutral-950 bg-white text-neutral-950";
   }
 }

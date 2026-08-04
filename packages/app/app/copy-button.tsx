@@ -11,7 +11,7 @@ export function CopyButton({ label, payload }: { label: string; payload: () => s
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       }}
-      className="rounded bg-neutral-800 px-2 py-1 text-xs font-medium hover:bg-neutral-700"
+      className="nb-secondary-action px-2 py-1 text-xs"
     >
       {copied ? "Copied ✓" : label}
     </button>
